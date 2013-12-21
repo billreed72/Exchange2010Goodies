@@ -1,8 +1,8 @@
 Import-CSV C:\userList.csv |
 foreach {
-$userprincipalname = $_.Firstname + “.” +  $_.Lastname + “@dexlab.net”
-$ExternalEmailAddress = $_.Firstname + “.” +  $_.Lastname + “@galias.dexlab.net”
-$name = $_.Firstname + “ ” +  $_.Lastname + " (SD)"
-$OU = "dexlab.net/Users"
-New-MailContact -ExternalEmailAddress $ExternalEmailAddress -Name $name -Alias $_.alias -OrganizationalUnit $OU -FirstName $_.Firstname -LastName $_.Lastname
+$domainAlias = '@galias.dex10.net'
+$ExternalEmailAddress = $_.Firstname + '.' +  $_.Lastname + $domainAlias
+$name = $_.Firstname + ' ' +  $_.Lastname + ' (SD)'
+$OU = 'dex10.net/Special Delivery'
+New-MailContact -ExternalEmailAddress $ExternalEmailAddress -Name $name -Alias $_.alias -FirstName $_.Firstname -LastName $_.Lastname -OrganizationalUnit $OU
 }
