@@ -23,52 +23,37 @@ Import-CSV 'c:\userList-ADID-SMTP.csv' |
 foreach {
 $Email = $_.PrimarySmtpAddress
 $sam = $_.Identity
-
-Write-Host "*******************************************************************************" -foregroundcolor magenta
-Write-Host "  Get Mailbox Permission for: "-foregroundcolor magenta
-Write-Host "                             $Email" -foregroundcolor yellow
-Write-Host "*******************************************************************************" -foregroundcolor magenta
-
-########## FULL ACCESS ################
-$FullAccess = Get-MailboxPermission -Identity $Email | where { ($_.AccessRights -eq "FullAccess" -and $_.IsInherited -eq $false -and $_.User -notlike "NT AUTHORITY\SELF") } | Select User
-Write-Host "Full Access:" -foregroundcolor Green
-Foreach ($User in $FullAccess)
+Write-Host '  Get Mailbox Permission for: ' -ForegroundColor Magenta -NoNewLine; Write-Host $Email -ForegroundColor Yellow
+$FullAccess = Get-MailboxPermission -Identity $Email | where { ($_.AccessRights -eq 'FullAccess' -and $_.IsInherited -eq $False -and $_.User -notlike 'NT AUTHORITY\SELF') } | Select User
+Write-Host 'Full Access: ' -ForegroundColor Green
+foreach ($User in $FullAccess)
  {
   Write-Host $User.User
  }
-
-########## SEND-AS ####################
-$SendAs = Get-ADPermission -Identity $sam | Where {$_.ExtendedRights -like "Send-As" -and $_.User -notlike "NT AUTHORITY\SELF" -and $_.Deny -eq $false} | Select User
-Write-Host "Send As:" -foregroundcolor Green
-Foreach ($User in $SendAs)
+$SendAs = Get-ADPermission -Identity $sam | Where {$_.ExtendedRights -like 'Send-As' -and $_.User -notlike 'NT AUTHORITY\SELF' -and $_.Deny -eq $False} | Select User
+Write-Host 'Send As: ' -ForegroundColor Green
+foreach ($User in $SendAs)
  {
   Write-Host $User.User
  }
-
-########## SEND ON BEHALF #############
-#$SendOnBehalf = get-mailbox -Identity $Email | Select GrantSendOnBehalfTo
-$SendOnBehalf = get-mailbox -Identity $Email | Select @{Name="SendOnBehalf";Expression={$_."GrantSendOnBehalfTo"}}
-Write-Host "Send On Behalf:" -foregroundcolor Green
-Foreach ($User in $SendOnBehalf)
+$SendOnBehalf = Get-Mailbox -Identity $Email | Select @{Name='SendOnBehalf';Expression={$_.'GrantSendOnBehalfTo'}}
+Write-Host 'Send On Behalf: ' -ForegroundColor Green
+foreach ($User in $SendOnBehalf)
  {
   Write-Host $User.SendOnBehalf
  }
-
-########## MAILBOX FOLDERS ############
-$folders = Get-MailboxFolderStatistics -Identity $Email | Where {$_.Foldertype -ne "SyncIssues" -and $_.Foldertype -ne "Conflicts" -and $_.Foldertype -ne "LocalFailures" -and $_.Foldertype -ne "ServerFailures" -and $_.Foldertype -ne "RecoverableItemsRoot" -and $_.Foldertype -ne "RecoverableItemsDeletions" -and $_.Foldertype -ne "RecoverableItemsPurges" -and $_.Foldertype -ne "RecoverableItemsVersions" -and $_.Foldertype -ne "Root"} | select folderpath,ItemsInFolder,FolderSize
-Write-Host "Mailbox Folders:" -foregroundcolor Green
+$folders = Get-MailboxFolderStatistics -Identity $Email | Where {$_.FolderType -ne 'SyncIssues' -and $_.FolderType -ne 'Conflicts' -and $_.FolderType -ne 'LocalFailures' -and $_.FolderType -ne 'ServerFailures' -and $_.FolderType -ne 'RecoverableItemsRoot' -and $_.FolderType -ne 'RecoverableItemsDeletions' -and $_.FolderType -ne 'RecoverableItemsPurges' -and $_.FolderType -ne 'RecoverableItemsVersions' -and $_.Foldertype -ne 'Root'} | Select FolderPath,ItemsInFolder,FolderSize
+Write-Host 'Mailbox Folders: ' -ForegroundColor Green
 Foreach ($Folder in $folders)
  {
-  Write-Host 'Folder:'$Folder.Folderpath 'Items:'$Folder.ItemsInFolder 'Size:'$Folder.FolderSize
+  Write-Host 'Folder: '$Folder.FolderPath 'Items: '$Folder.ItemsInFolder 'Size: '$Folder.FolderSize
  }
-
-########## MAPI PERMISSIONS ###########
-Write-Host "MAPI Permissions:" -foregroundcolor Green
-get-mailboxfolderpermission -identity $Email":\" | ft foldername, User, AccessRights
-Foreach ($Folder in $folders)
+Write-Host 'MAPI Permissions: ' -ForegroundColor Green
+Get-MailboxFolderPermissions -Identity $Email":\" | ft FolderName, User, AccessRights
+foreach ($Folder in $folders)
  {
   $NormalizedFolder = $Folder.FolderPath.Replace("/","\")
-  $NormalizedIdentity = $Email + ":" + $NormalizedFolder
-  get-mailboxfolderpermission -identity $NormalizedIdentity | ft foldername, User, AccessRights
+  $NormalizedIdentity = $Email + ':' + $NormalizedFolder
+  Get-MailboxFolderPermissions -Identity $NormalizedIdentity | ft FolderName, User, AccessRights
  }
 }
