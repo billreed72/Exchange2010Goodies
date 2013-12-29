@@ -1,5 +1,5 @@
-Write-Host 'Mailbox			Send On Behalf Granted' -ForegroundColor Magenta
-Write-Host '-------			----------------------' -ForegroundColor Green
+Write-Host 'Mailbox			Send As Granted' -ForegroundColor Magenta
+Write-Host '-------			---------------' -ForegroundColor Green
 Import-CSV 'c:\userList-ADID-SMTP.csv' |
 foreach {
 $Email = $_.PrimarySmtpAddress
