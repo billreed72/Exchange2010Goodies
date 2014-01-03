@@ -1,6 +1,9 @@
 Write-Host 'Mailbox Folder Statistics' -ForegroundColor Magenta
 Write-Host '-------------------------' -ForegroundColor Green
 Import-CSV 'c:\userList-ADID-SMTP.csv' |
+# The CSV file contains 2 columns of data:
+# "PrimarySmtpAddress","Identity"
+# "btester@dex10.net","dex10.net/Staff/Bob Tester"
 foreach {
 $Email = $_.PrimarySmtpAddress
 $sam = $_.Identity
