@@ -12,6 +12,6 @@ $sam = $_.Identity
 $SendOnBehalf = get-mailbox -Identity $Email | Select @{Name="SendOnBehalf";Expression={$_."GrantSendOnBehalfTo"}}
 Foreach ($User in $SendOnBehalf)
  {
-  Write-Host $Email -ForegroundColor Magenta -NoNewLine; Write-Host " - " $User.User  -ForegroundColor Cyan
+  Write-Host $Email -ForegroundColor Magenta -NoNewLine; Write-Host " - " $User.SendOnBehalf  -ForegroundColor Cyan
  }
 }
