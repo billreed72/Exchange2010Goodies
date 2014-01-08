@@ -49,11 +49,11 @@ Foreach ($Folder in $folders)
   Write-Host 'Folder: '$Folder.FolderPath 'Items: '$Folder.ItemsInFolder 'Size: '$Folder.FolderSize
  }
 Write-Host 'MAPI Permissions: ' -ForegroundColor Green
-Get-MailboxFolderPermissions -Identity $Email":\" | ft FolderName, User, AccessRights
+Get-MailboxFolderPermission -Identity $Email":\" | ft FolderName, User, AccessRights
 foreach ($Folder in $folders)
  {
   $NormalizedFolder = $Folder.FolderPath.Replace("/","\")
   $NormalizedIdentity = $Email + ':' + $NormalizedFolder
-  Get-MailboxFolderPermissions -Identity $NormalizedIdentity | ft FolderName, User, AccessRights
+  Get-MailboxFolderPermission -Identity $NormalizedIdentity | ft FolderName, User, AccessRights
  }
 }
