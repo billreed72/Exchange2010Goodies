@@ -1,14 +1,19 @@
-Write-Host '----------------------------------------'
 Write-Host 'Please provide an INPUT filename.' -ForegroundColor Cyan -BackgroundColor DarkBlue;
 $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)';
-Write-Host '----------------------------------------'
 Write-Host 'And now... provide an OUTPUT filename.' -ForegroundColor White -BackgroundColor DarkGreen;
 $OutFile = Read-Host '(i.e. c:\outputfile.csv or outputfile.csv)'
 $OutData = @()
-
+Function RecExpand ($grpn){
+$grpfinal= @()
+$grp = Get-DistributionGroupMember -Identity $grpn -ResultSize unlimited
+foreach ($g in $grp){
+ if($g.RecipientType -like "*group*"){$grpfinal += RecExpand $g.Tostring()}
+               else{$grpfinal += $g.Tostring()}
+ }
+ Return $grpfinal
+}
 $UserList = get-content $UserListFile
 $CurProcMbx = 1
-
 Foreach ($UserID in $UserList) {
   write-progress "Processing Mailbox num: " $CurProcMbx
   $FinalList = @()
@@ -31,6 +36,4 @@ Foreach ($UserID in $UserList) {
   $CurProcMbx++
 }
 $OutData | export-csv $Outfile;
-Write-Host '----------------------------------------' -ForegroundColor Green;
-Write-Host 'All done! Have a nice day. :-) ' -ForegroundColor Magenta;
-Write-Host '----------------------------------------' -ForegroundColor Green
+Write-Host 'All done! Have a nice day. :-) ' -ForegroundColor Magenta
