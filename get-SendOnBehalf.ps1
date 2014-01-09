@@ -6,7 +6,7 @@ $OutData = @()
 Function RecExpand ($grpn){
 $grpfinal= @()
 $grp = Get-DistributionGroupMember -Identity $grpn -ResultSize unlimited
-foreach ($g in $grp){
+Foreach ($g in $grp){
  if($g.RecipientType -like "*group*"){$grpfinal += RecExpand $g.Tostring()}
                else{$grpfinal += $g.Tostring()}
  }
