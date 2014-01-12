@@ -14,7 +14,7 @@ Foreach ($Identity in $ADIDList) {
   $GrantedSendAsList = @()
   $SendAsUserAD = Get-ADPermission $UserADID.Identity | Where {$_.ExtendedRights -like 'Send-As' -and $_.IsInherited -eq $False -and $_.User -notlike 'NT AUTHORITY\SELF'} | Select User
   $GrantedSendAsList += $SendAsUserAD
-####### Loop 3: For each SendasUserAD, that's not NULL
+####### Loop 3: For each SendasUserAD, that's not NULL,, list the grantor & grantee
 Foreach ($SendAsUserAD in $GrantedSendAsList) {
   If ($SendAsUserAD -ne $NULL) {
     $OutObject = "" | select Mailbox, SendAsAccess
@@ -27,4 +27,4 @@ Foreach ($SendAsUserAD in $GrantedSendAsList) {
   $CurProcMbx++
 }
 }
-$Outdata | Export-csv  -Path ('SendAsOutput-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
+$Outdata | Export-csv  -Path ('SendAs-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
