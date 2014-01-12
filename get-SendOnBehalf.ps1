@@ -1,14 +1,12 @@
-Write-Host 'Please provide an INPUT filename.' -ForegroundColor Cyan -BackgroundColor DarkBlue;
+Write-Host 'INPUT filename:' -ForegroundColor Cyan -BackgroundColor DarkBlue;
 $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)';
-Write-Host 'And now... provide an OUTPUT filename.' -ForegroundColor White -BackgroundColor DarkGreen;
-$OutFile = Read-Host '(i.e. c:\outputfile.csv or outputfile.csv)'
 $OutData = @()
-Function RecExpand ($grpn){
+Function RecExpand ($grpn) {
 $grpfinal= @()
 $grp = Get-DistributionGroupMember -Identity $grpn -ResultSize unlimited
-Foreach ($g in $grp){
- if($g.RecipientType -like "*group*"){$grpfinal += RecExpand $g.Tostring()}
-               else{$grpfinal += $g.Tostring()}
+Foreach ($g in $grp) {
+  if($g.RecipientType -like "*group*"){$grpfinal += RecExpand $g.Tostring()}
+  else{$grpfinal += $g.Tostring()}
  }
  Return $grpfinal
 }
@@ -35,5 +33,4 @@ Foreach ($UserID in $UserList) {
   }
   $CurProcMbx++
 }
-$OutData | export-csv $Outfile;
-Write-Host 'All done! Have a nice day. :-) ' -ForegroundColor Magenta
+$Outdata | Export-csv  -Path ('SendOnBehalfOutput-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date));
