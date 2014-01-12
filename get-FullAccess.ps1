@@ -21,4 +21,4 @@ Foreach ($FullAccessUserID in $GrantedFullAccessList) {
   $CurProcMbx++
 }
 }
-$Outdata | Export-csv  -Path ('FullAccessOutput-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
+$Outdata | Export-csv  -Path ('FullAccess-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
