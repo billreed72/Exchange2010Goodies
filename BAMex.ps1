@@ -1,5 +1,5 @@
 $xAppName = "BAM! (Bill's Access Manager) for Exchange 2010 – Version 0.1"
-$unAss = "(tbd) *** [Unassigned]"
+$NoAss = "(tbd) *** [Unassigned]"
 [BOOLEAN]$global:xExitSession=$false
 function LoadMenuSystem(){
 [INT]$xMenu1=0
@@ -43,7 +43,7 @@ Write-Host “`t`t`t1. Exchange Schema Versions” -Fore Green
 # MENU OPTION TEXT A-1-2
 Write-Host “`t`t`t2. Exchange Server Names and Versions” -Fore Green
 # MENU OPTION TEXT A-1-3
-Write-Host “`t`t`t3. $unAss” -Fore DarkGreen
+Write-Host “`t`t`t3. $NoAss” -Fore DarkGreen
 # MENU OPTION TEXT A-1-4
 Write-Host “`t`t`t4. Go to Main Menu`n” -Fore Green
 [int]$xMenu2 = Read-Host “`t`tEnter Menu Option Number”
@@ -207,7 +207,6 @@ Write-host "`nResults saved to a file named like: " -Fore Yellow -Back Blue -NoN
 Write-host '"SendOnBehalf-yyyyMMddHHmm.csv"' -Fore DarkRed -Back gray;start-sleep -seconds 3
 $OutSOBData | Export-csv  -Path ('SendOnBehalf-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date));
 }
-
 ################
 # MENU OPTION FUNCTION A-2-3 SEND-AS
 ################
@@ -265,11 +264,11 @@ CLS
 Write-Host “`n`t$xAppName`n” -Fore Magenta
 Write-Host “`t`tPlease select an option`n” -Fore Green
 # MENU OPTION TEXT A-3-1
-Write-Host “`t`t`t1. $unAss” -Fore DarkGreen
+Write-Host “`t`t`t1. $NoAss” -Fore DarkGreen
 # MENU OPTION TEXT A-3-2
-Write-Host “`t`t`t2. $unAss” -Fore DarkGreen
+Write-Host “`t`t`t2. $NoAss” -Fore DarkGreen
 # MENU OPTION TEXT A-3-3
-Write-Host “`t`t`t3. $unAss” -Fore DarkGreen
+Write-Host “`t`t`t3. $NoAss” -Fore DarkGreen
 # MENU OPTION TEXT A-3-4
 Write-Host “`t`t`t4. Go to Main Menu`n” -Fore Green
 [int]$xMenu2 = Read-Host “`t`tEnter Menu Option Number”
