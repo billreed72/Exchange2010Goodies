@@ -1,5 +1,5 @@
 $xAppName = "BAM! (Bill's Access Manager) for Exchange 2010 – Version 0.1"
-$NoAss = "(tbd) *** [Unassigned]"
+$unAss = "(tbd) *** [Unassigned]"
 [BOOLEAN]$global:xExitSession=$false
 function LoadMenuSystem(){
 [INT]$xMenu1=0
@@ -43,7 +43,7 @@ Write-Host “`t`t`t1. Exchange Schema Versions” -Fore Green
 # MENU OPTION TEXT A-1-2
 Write-Host “`t`t`t2. Exchange Server Names and Versions” -Fore Green
 # MENU OPTION TEXT A-1-3
-Write-Host “`t`t`t3. $NoAss” -Fore DarkGreen
+Write-Host “`t`t`t3. $unAss” -Fore DarkGreen
 # MENU OPTION TEXT A-1-4
 Write-Host “`t`t`t4. Go to Main Menu`n” -Fore Green
 [int]$xMenu2 = Read-Host “`t`tEnter Menu Option Number”
@@ -58,17 +58,21 @@ Switch ($xMenu2){
 1{
 Import-Module ActiveDirectory
 $OutEXVdata = @()
-$ExchangeSchemaVersion = get-ADObject 'CN=ms-Exch-Schema-Version-pt,CN=Schema,CN=Configuration,DC=dev10,DC=net' -Property rangeUpper | select rangeUpper
-$ExchangeOrganizationForestVersion = get-ADObject 'CN=First Organization,CN=Microsoft Exchange,CN=Services,CN=Configuration,DC=dev10,DC=net' -Property objectVersion | select objectVersion
-$ExchangeOrganizationDomainVersion = get-ADObject 'CN=Microsoft Exchange System Objects,DC=dev10,DC=net' -Property objectVersion | select objectVersion
+$ExForestAndDomain = read-host 'Please enter your forest and domain (i.e. DC=dev10,DC=net)'
+$ExOrg = read-host 'Please enter the Exchange Org Name (i.e. First Organization)'
+$ExchangeSchemaVersion = get-ADObject "CN=ms-Exch-Schema-Version-pt,CN=Schema,CN=Configuration,$ExForestAndDomain" -Property rangeUpper | select rangeUpper
+$ExchangeOrganizationForestVersion = get-ADObject "CN=$ExOrg,CN=Microsoft Exchange,CN=Services,CN=Configuration,$ExForestAndDomain" -Property objectVersion | select objectVersion
+$ExchangeOrganizationDomainVersion = get-ADObject "CN=Microsoft Exchange System Objects,$ExForestAndDomain" -Property objectVersion | select objectVersion
 $OutEXVer = "" | select ExSchmV,ExOrgForV,ExchOrgDomV
 $OutEXVer.ExSchmV = $ExchangeSchemaVersion.rangeUpper
 $OutEXVer.ExOrgForV = $ExchangeOrganizationForestVersion.objectVersion
 $OutEXVer.ExchOrgDomV = $ExchangeOrganizationDomainVersion.objectVersion
 $OutEXVdata += $OutEXVer
-Write-host 'Results saved to a file named like: ' -Fore Yellow -Back Blue -NoNewLine;
-Write-host '"ExchangeSchema-yyyyMMddHHmm.csv"' -Fore Blue -Back Yellow;start-sleep -seconds 3
-$OutEXVdata | Export-csv  -Path ('ExchangeSchema-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
+
+$SavePathEXVdata = ('ExchangeSchema-{1:yyyyMMddHHmmss}.csv' -f $env:COMPUTERNAME,(Get-Date))
+$OutEXVdata | Export-csv  -Path $SavePathEXVdata
+Write-host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
+Write-host $SavePathEXVdata -Fore DarkRed -Back gray;start-sleep -seconds 10
 }
 ################
 
@@ -84,7 +88,7 @@ $OutDVer.Name = $AdminDisplayVersion.Name
 $OutDVer.ADV = $AdminDisplayVersion.AdminDisplayVersion
 $ExchangeServerData += $OutDVer
 Write-host 'Results saved to a file named like: ' -Fore Yellow -Back Blue -NoNewLine;
-Write-host '"ExchangeServers-yyyyMMddHHmm.csv"' -Fore Blue -Back Yellow;start-sleep -seconds 3
+Write-host '"ExchangeServers-yyyyMMddHHmm.csv"' -Fore DarkRed -Back gray;start-sleep -seconds 3
 $ExchangeServerData | Export-csv  -Path ('ExchangeServers-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
 }
 ################
@@ -207,6 +211,7 @@ Write-host "`nResults saved to a file named like: " -Fore Yellow -Back Blue -NoN
 Write-host '"SendOnBehalf-yyyyMMddHHmm.csv"' -Fore DarkRed -Back gray;start-sleep -seconds 3
 $OutSOBData | Export-csv  -Path ('SendOnBehalf-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date));
 }
+
 ################
 # MENU OPTION FUNCTION A-2-3 SEND-AS
 ################
@@ -264,11 +269,11 @@ CLS
 Write-Host “`n`t$xAppName`n” -Fore Magenta
 Write-Host “`t`tPlease select an option`n” -Fore Green
 # MENU OPTION TEXT A-3-1
-Write-Host “`t`t`t1. $NoAss” -Fore DarkGreen
+Write-Host “`t`t`t1. $unAss” -Fore DarkGreen
 # MENU OPTION TEXT A-3-2
-Write-Host “`t`t`t2. $NoAss” -Fore DarkGreen
+Write-Host “`t`t`t2. $unAss” -Fore DarkGreen
 # MENU OPTION TEXT A-3-3
-Write-Host “`t`t`t3. $NoAss” -Fore DarkGreen
+Write-Host “`t`t`t3. $unAss” -Fore DarkGreen
 # MENU OPTION TEXT A-3-4
 Write-Host “`t`t`t4. Go to Main Menu`n” -Fore Green
 [int]$xMenu2 = Read-Host “`t`tEnter Menu Option Number”
