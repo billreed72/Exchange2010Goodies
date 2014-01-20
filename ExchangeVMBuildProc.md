@@ -3,7 +3,6 @@ Build Process for: dex.dev10.net
 OS ISO: en_windows_server_2008_r2_with_sp1_vl_build_x64_dvd_617403
 EX ISO: en_exchange_server_2007_with_service_pack_1_enterprise_and_standard_x64_dvd_x13-93829.iso (5.64 GB)
 
-New VirtualBox VM
 Name: dex
 OS: Windows 2008 (64bit)
 RAM: 4096 MB
