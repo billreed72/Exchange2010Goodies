@@ -14,10 +14,12 @@ EX ISO: mu_exchange_server_2010_x64_dvd_x15-82068.iso (1.12 GB)<br>
 EX SP1: Exchange2010-SP1-x64.exe (547.5 MB)<br>
 ___
 <b>Operating System: Windows Server 2008 R2 Standard with Service Pack 1</b><br>
+
 <b>Add & Configure Server Roles:</b><br>
 - Active Directory<br>
 - DNS Server<br>
-- IIS with IIS 6 Management Compatibility<br>
+- IIS with IIS 6 Management Compatibility
+
 <b>Add IIS Service Roles:</b><br>
 - Windows Authentication<br>
 - Basic Authentication<br>
