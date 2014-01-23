@@ -23,7 +23,7 @@ Write-Host “`t`t`t4. Quit and exit`n” -Fore Cyan
 #… Retrieve the response from the user
 [int]$xMenu1 = Read-Host “`t`tEnter Menu Option Number”
 if( $xMenu1 -lt 1 -or $xMenu1 -gt 4 ){
-Write-Host “`tPlease select one of the options available.`n” -Fore Red;start-Sleep -Seconds 1
+Write-Host “`tPlease select one of the options available.`n” -Fore Red;start-Sleep -Seconds 
 }
 }
 Switch ($xMenu1){    #… User has selected a valid entry.. load next menu
@@ -58,8 +58,10 @@ Switch ($xMenu2){
 1{
 Import-Module ActiveDirectory
 $OutEXVdata = @()
+
 $ExForestAndDomain = read-host 'Please enter your forest and domain (i.e. DC=dev10,DC=net)'
 $ExOrg = read-host 'Please enter the Exchange Org Name (i.e. First Organization)'
+
 $ExchangeSchemaVersion = get-ADObject "CN=ms-Exch-Schema-Version-pt,CN=Schema,CN=Configuration,$ExForestAndDomain" -Property rangeUpper | select rangeUpper
 $ExchangeOrganizationForestVersion = get-ADObject "CN=$ExOrg,CN=Microsoft Exchange,CN=Services,CN=Configuration,$ExForestAndDomain" -Property objectVersion | select objectVersion
 $ExchangeOrganizationDomainVersion = get-ADObject "CN=Microsoft Exchange System Objects,$ExForestAndDomain" -Property objectVersion | select objectVersion
@@ -72,7 +74,7 @@ $OutEXVdata += $OutEXVer
 $SavePathEXVdata = ('ExchangeSchema-{1:yyyyMMddHHmmss}.csv' -f $env:COMPUTERNAME,(Get-Date))
 $OutEXVdata | Export-csv  -Path $SavePathEXVdata
 Write-host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
-Write-host $SavePathEXVdata -Fore DarkRed -Back gray;start-sleep -seconds 10
+Write-host $SavePathEXVdata -Fore DarkRed -Back gray;start-sleep -seconds 3
 }
 ################
 
@@ -87,9 +89,11 @@ $OutDVer = "" | select Name,ADV
 $OutDVer.Name = $AdminDisplayVersion.Name
 $OutDVer.ADV = $AdminDisplayVersion.AdminDisplayVersion
 $ExchangeServerData += $OutDVer
-Write-host 'Results saved to a file named like: ' -Fore Yellow -Back Blue -NoNewLine;
-Write-host '"ExchangeServers-yyyyMMddHHmm.csv"' -Fore DarkRed -Back gray;start-sleep -seconds 3
-$ExchangeServerData | Export-csv  -Path ('ExchangeServers-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
+
+$SavePathExServerData = ('ExchangeServers-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
+$ExchangeServerData | Export-csv  -Path $SavePathExServerData
+Write-host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
+Write-host $SavePathExServerData -Fore DarkRed -Back gray;start-sleep -seconds 3
 }
 ################
 # MENU OPTION FUNCTION A-1-3
@@ -156,9 +160,10 @@ Foreach ($FullAccessUserID in $GrantedFullAccessList) {
   $CurProcMbxFA++
 }
 }
-Write-host "`nResults saved to a file named like: " -Fore Yellow -Back Blue -NoNewLine;
-Write-host '"FullAccess-yyyyMMddHHmm.csv"' -Fore DarkRed -Back gray;start-sleep -seconds 3
-$OutFAData | Export-csv  -Path ('FullAccess-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
+$SavePathFAdata = ('FullAccess-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
+$OutFAData | Export-csv  -Path $SavePathFAdata
+Write-host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
+Write-host $SavePathFAdata -Fore DarkRed -Back gray;start-sleep -seconds 3
 }
 ################
 
@@ -207,11 +212,11 @@ Foreach ($recipient in $InitialList) {
   }
   $CurProcMbxSOB++
 }
-Write-host "`nResults saved to a file named like: " -Fore Yellow -Back Blue -NoNewLine;
-Write-host '"SendOnBehalf-yyyyMMddHHmm.csv"' -Fore DarkRed -Back gray;start-sleep -seconds 3
-$OutSOBData | Export-csv  -Path ('SendOnBehalf-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date));
+$SavePathSOBdata = ('SendOnBehalf-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
+$OutSOBData | Export-csv  -Path $SavePathSOBdata
+Write-host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
+Write-host $SavePathSOBdata -Fore DarkRed -Back gray;start-sleep -seconds 3
 }
-
 ################
 # MENU OPTION FUNCTION A-2-3 SEND-AS
 ################
@@ -246,9 +251,10 @@ Foreach ($SendAsUserAD in $GrantedSendAsList) {
   $CurProcMbxSA++
 }
 }
-Write-host “`nResults saved to a file named like: " -Fore Yellow -Back Blue -NoNewLine;
-Write-host '"SendAs-yyyyMMddHHmm.csv"' -Fore DarkRed -Back Gray;start-sleep -seconds 3
-$OutSAData | Export-csv  -Path ('SendAs-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
+$SavePathSAdata = ('SendAs-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
+$OutSAData | Export-csv  -Path $SavePathSAdata
+Write-host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
+Write-host $SavePathSAdata -Fore DarkRed -Back gray;start-sleep -seconds 3
 }
 ################
 # MENU OPTION FUNCTION A-2-4
