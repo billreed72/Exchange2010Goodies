@@ -1,4 +1,4 @@
-$xAppName = "BAM! (Bill's Access Manager) for Exchange 2010 – Version 0.1"
+$xAppName = "BAM! for Exchange 2010 – Version 0.1"
 $unAss = "(tbd) *** [Unassigned]"
 [BOOLEAN]$global:xExitSession=$false
 #==============================================================================
@@ -20,7 +20,7 @@ function GetExchangeSchemaVerions {
     $SavePathEXVdata = ('ExchangeSchema-{1:yyyyMMddHHmmss}.csv' -f $env:COMPUTERNAME,(Get-Date))
     $OutEXVdata | Export-csv  -Path $SavePathEXVdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
-    Write-Host $SavePathEXVdata -Fore DarkRed -Back gray;start-sleep -seconds 3
+    Write-Host $SavePathEXVdata -Fore DarkRed -Back gray;start-sleep -seconds 1
 }
 #==============================================================================
 # FUNCTION: Exchange Server Names and Versions
@@ -36,7 +36,7 @@ function GetExchangeServerNamesADV {
     $SavePathExServerData = ('ExchangeServers-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
     $ExchangeServerData | Export-csv  -Path $SavePathExServerData
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
-    Write-Host $SavePathExServerData -Fore DarkRed -Back gray;start-sleep -seconds 3
+    Write-Host $SavePathExServerData -Fore DarkRed -Back gray;start-sleep -seconds 1
 }
 #==============================================================================
 # FUNCTION: Get Full Access Permissions
@@ -66,7 +66,7 @@ function GetFullAccess {
     $SavePathFAdata = ('FullAccess-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
     $OutFAData | Export-csv  -Path $SavePathFAdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
-    Write-Host $SavePathFAdata -Fore DarkRed -Back gray;start-sleep -seconds 3
+    Write-Host $SavePathFAdata -Fore DarkRed -Back gray;start-sleep -seconds 1
 }
 #==============================================================================
 # FUNCTION: Get Send On Behlaf Access Permissions
@@ -110,7 +110,7 @@ function GetSendOnBehalfAccess {
     $SavePathSOBdata = ('SendOnBehalf-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
     $OutSOBData | Export-csv  -Path $SavePathSOBdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
-    Write-Host $SavePathSOBdata -Fore DarkRed -Back gray;start-sleep -seconds 3
+    Write-Host $SavePathSOBdata -Fore DarkRed -Back gray;start-sleep -seconds 1
 }
 #==============================================================================
 # FUNCTION: Get Send As Access Permissions
@@ -144,7 +144,7 @@ function GetSendAsAccess {
     $SavePathSAdata = ('SendAs-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
     $OutSAData | Export-csv  -Path $SavePathSAdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
-    Write-Host $SavePathSAdata -Fore DarkRed -Back gray;start-sleep -seconds 3
+    Write-Host $SavePathSAdata -Fore DarkRed -Back gray;start-sleep -seconds 1
 }
 #========================================================================
 # FUNCTION: SETUP Dual Delivery (CREATES CONTACTS,SETS DELV OPTS, & HIDES CONTACTS)
@@ -251,7 +251,7 @@ function LoadMenuSystem () {
     Write-Host "`t`t`t4. Quit and exit`n" -Fore Cyan
     [int]$xMenu1 = Read-Host "`t`tEnter Menu Option Number"
         if( $xMenu1 -lt 1 -or $xMenu1 -gt 4 ){
-        Write-Host "`tPlease select one of the options available.`n" -Fore Red;start-Sleep -Seconds 
+        Write-Host "`tPlease select one of the options available.`n" -Fore Red;start-Sleep -Seconds 1
         }
     }
     switch ($xMenu1){    #… User has selected a valid entry.. load next menu
@@ -273,21 +273,9 @@ function LoadMenuSystem () {
         }
     }
         switch ($xMenu2){
-        #==============================================================================
-        # Exchange Schema Versions
-        #==============================================================================
     1 { GetExchangeSchemaVerions }
-        #==============================================================================
-        # Exchange Server Names and Versions
-        #==============================================================================
     2 { GetExchangeServerNamesADV }
-        #==============================================================================
-        # TBD
-        #==============================================================================
-    3 { Write-Host "`n`t$unAss`n" -Fore Yellow;start-Sleep -Seconds 3 }
-        #==============================================================================
-        # back to Main Menu
-        #==============================================================================
+    3 { Write-Host "`n`t$unAss`n" -Fore Yellow;start-Sleep -Seconds 1 }
     default { Write-Host "`n`tYou Selected Option 4 – Quit the Administration Tasks`n" -Fore Yellow; break }
     }
 }
@@ -309,26 +297,14 @@ function LoadMenuSystem () {
         Write-Host "`tPlease select one of the options available.`n" -Fore Red;start-Sleep -Seconds 1
         }
     switch ($xMenu2){
-        #==============================================================================
-        # FULL ACCESS
-        #==============================================================================
     1 { GetFullAccess }
-        #==============================================================================
-        # SEND ON BEHALF
-        #==============================================================================
     2 { GetSendOnBehalfAccess }
-        #==============================================================================
-        # SEND-AS
-        #==============================================================================
     3 { GetSendAsAccess }
-        #==============================================================================
-        # BACK TO MAIN MENU
-        #==============================================================================
     default { Write-Host "`n`tYou Selected Option 4 – Go to Main Menu`n" -Fore Yellow; break }
     }
 }
     #==============================================================================
-    # SWITCH: Special Delivery Menu
+    # MENU: Special Delivery Menu
     #==============================================================================
 3 {
     while ( $xMenu2 -lt 1 -or $xMenu2 -gt 4 ){
@@ -345,34 +321,19 @@ function LoadMenuSystem () {
         }
     }
     switch ($xMenu2){
-        #==============================================================================
-        # Setup Dual Delivery
-        #==============================================================================
     1 { SetupDualDelivery }
-        #==============================================================================
-        # Setup Split Delivery
-        #==============================================================================
     2 { SetupSplitDelivery }
-        #==============================================================================
-        # TBD
-        #==============================================================================
-    3 { Write-Host "`n`t$unAss`n" -Fore Yellow;start-Sleep -Seconds 3 }
-        #==============================================================================
-        # TBD
-        #==============================================================================
+    3 { Write-Host "`n`t$unAss`n" -Fore Yellow;start-Sleep -Seconds 1 }
     default { Write-Host "`n`tYou Selected Option 4 – Go to Main Menu`n" -Fore Yellow; break }
     }
 }
-    #==============================================================================
-    # MAIN MENU QUIT APP
-    #==============================================================================
 default { $global:xExitSession=$true;break }
 }
 }
 LoadMenuSystem
 if ($xExitSession){
-Exit-PSSession    #… User quit & Exit
+Exit-PSSession
 } else {
-.\BAMex.ps1    #… Loop the function
+.\BAMex.ps1
 $CurProcMbx = 1
 }
