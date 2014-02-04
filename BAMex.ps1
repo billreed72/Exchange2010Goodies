@@ -1,9 +1,49 @@
-$xAppName = "BAM! for Exchange 2010 – Version 0.1"
-$unAss = "(tbd) *** [Unassigned]"
-[BOOLEAN]$global:xExitSession=$false
-#==============================================================================
+$xAppName = "BAM! (Bill's Application Manager) – Version 0.2"
+$unAss = "***[Unassigned]***"
+$BamLogName = "BAMex"
+$BamLogSource = "BAMSource"
+If (!((Get-EventLog -List | Select-Object "Log") -match $BamLogName)) {new-EventLog -LogName $BamLogName -Source $BamLogSource}
+#======================================
+# Setup And Restrict Delivery
+#======================================
+function setupAndRestrictDelivery {
+function createDistro {
+    write-EventLog -LogName $BamLogName -EventID 666 -Message "Delivery Restriction setup started." -Source $BamLogSource -EntryType Information
+    $distroName = @()
+    $distroName=Read-Host "`tNew Distro Name (i.e. NoDelivery)"
+    $distroOU=Read-Host "`tRestricted Delivery OU Name (i.e. dev10.net/Restricted Delivery)"
+    new-DistributionGroup -Name $distroName -OrganizationalUnit $distroOU -SamAccountName $distroName -Alias $distroName | Out-Null
+    set-Group -Identity $distroName -Notes "Created by BAMex!"
+    write-EventLog -LogName $BamLogName -EventID 666 -Message "Distro [$distroName] created in Organizational Unit [$distroOU]." -Source $BamLogSource -EntryType Information
+}
+function createTransRule {
+    $tRuleName=Read-Host "`tEnter a Transportation Rule Name"
+    $tRuleFromMemberOf=(get-distributionGroup $distroName).primarySmtpAddress
+    $tRuleRejectMessage="You are no longer authorized to send email from this system."
+    $tRuleRejectMessageStatusCode="5.7.1"
+    New-TransportRule -Name $tRuleName -Comments '' -Priority '0' -Enabled $true -FromMemberOf $tRuleFromMemberOf -RejectMessageReasonText $tRuleRejectMessage -RejectMessageEnhancedStatusCode $tRuleRejectMessageStatusCode | Out-Null
+    write-EventLog -LogName $BamLogName -EventID 666 -Message "Transportation rule [$tRuleName] created." -Source $BamLogSource -EntryType Information
+}    
+function addMembersToDistro {
+    Write-Host 'INPUT filename.' -Fore Cyan -Back DarkBlue;
+    $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)'
+    $UserList = Get-Content $UserListFile
+    $groupName = get-group | Where { ($_.Notes -contains 'Created by BAMex!') } | select Identity
+    $CurProcMbxARM = 1
+    foreach ($UserID in $UserList) {
+        Write-Host -NoNewLine $CurProcMbxARM -Fore Blue -Back White; write-host '.' -Fore Red -Back White -NoNewLine
+        Add-DistributionGroupMember -Identity $groupName.Identity -Member $UserID
+        $CurProcMbxARM++
+    }
+}
+createDistro
+createTransRule
+measure-command { addMembersToDistro }; start-sleep -seconds 3
+write-EventLog -LogName $BamLogName -EventID 666 -Message "Delivery Restriction setup completed." -Source $BamLogSource -EntryType Information
+}
+#======================================
 # FUNCTION: Exchange Schema Versions
-#==============================================================================
+#======================================
 function GetExchangeSchemaVerions {
     Import-Module ActiveDirectory
     $OutEXVdata = @()
@@ -22,9 +62,9 @@ function GetExchangeSchemaVerions {
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathEXVdata -Fore DarkRed -Back gray;start-sleep -seconds 1
 }
-#==============================================================================
+#======================================
 # FUNCTION: Exchange Server Names and Versions
-#==============================================================================
+#======================================
 function GetExchangeServerNamesADV {
     Import-Module ActiveDirectory
     $ExchangeServerData = @()
@@ -38,9 +78,9 @@ function GetExchangeServerNamesADV {
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathExServerData -Fore DarkRed -Back gray;start-sleep -seconds 1
 }
-#==============================================================================
+#======================================
 # FUNCTION: Get Full Access Permissions
-#==============================================================================
+#======================================
 function GetFullAccess {
     Write-Host 'INPUT filename.' -Fore Cyan -Back DarkBlue;
     $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)';
@@ -68,9 +108,9 @@ function GetFullAccess {
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathFAdata -Fore DarkRed -Back gray;start-sleep -seconds 1
 }
-#==============================================================================
+#======================================
 # FUNCTION: Get Send On Behlaf Access Permissions
-#==============================================================================
+#======================================
 function GetSendOnBehalfAccess {
     Write-Host 'INPUT filename:' -Fore Cyan -Back DarkBlue;
     $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)';
@@ -112,9 +152,9 @@ function GetSendOnBehalfAccess {
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathSOBdata -Fore DarkRed -Back gray;start-sleep -seconds 1
 }
-#==============================================================================
+#======================================
 # FUNCTION: Get Send As Access Permissions
-#==============================================================================
+#======================================
 function GetSendAsAccess {
     Write-Host 'INPUT filename.' -Fore Cyan -Back DarkBlue;
     $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)';
@@ -146,9 +186,9 @@ function GetSendAsAccess {
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathSAdata -Fore DarkRed -Back gray;start-sleep -seconds 1
 }
-#========================================================================
+#======================================
 # FUNCTION: SETUP Dual Delivery (CREATES CONTACTS,SETS DELV OPTS, & HIDES CONTACTS)
-#========================================================================
+#======================================
 function SetupDualDelivery {
     Write-Host 'INPUT filename.' -Fore Cyan -Back DarkBlue
     $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)'
@@ -168,9 +208,9 @@ function SetupDualDelivery {
         Set-MailContact $sdA -HiddenFromAddressListsEnabled $True
     }
 }
-#========================================================================
+#======================================
 # FUNCTION: SETUP Split Delivery (CREATES CONTACTS,SETS DELV OPTS, & HIDES CONTACTS)
-#========================================================================
+#======================================
 function SetupSplitDelivery {
     Write-Host 'INPUT filename.' -Fore Cyan -Back DarkBlue
     $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)'
@@ -186,13 +226,13 @@ function SetupSplitDelivery {
         $sdSMTP = $A+$sdDomain
         $sdDName = $D+"(SD)"
         New-MailContact -ExternalEmailAddress $sdSMTP -Name $sdDName -Alias $sdA -FirstName $F -LastName $L -OrganizationalUnit $sdOU
-        Set-Mailbox $UserID -DeliverToMailboxAndForward:$True -ForwardingAddress $sdSMTP
+        Set-Mailbox $UserID -DeliverToMailboxAndForward:$False -ForwardingAddress $sdSMTP
         Set-MailContact $sdA -HiddenFromAddressListsEnabled $True
     }
 }
-#========================================================================
+#======================================
 # FUNCTION: VERIFY DUAL DELIVERY CONTACT DATA
-#========================================================================
+#======================================
 function ValidateDDContactData {
     Write-Host 'INPUT filename.' -Fore Cyan -Back DarkBlue
     $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)'
@@ -206,9 +246,9 @@ function ValidateDDContactData {
         Get-MailContact $sdA | select OrganizationalUnit,DisplayName,ExternalEmailAddress,HiddenFromAddressListsEnabled
     }
 }
-#========================================================================
+#======================================
 # FUNCTION: VERIFY SPLIT DELIVERY CONTACT DATA
-#========================================================================
+#======================================
 function ValidateDDContactData {
     Write-Host 'INPUT filename.' -Fore Cyan -Back DarkBlue
     $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)'
@@ -222,9 +262,9 @@ function ValidateDDContactData {
         Get-MailContact $sdA | select OrganizationalUnit,DisplayName,ExternalEmailAddress,HiddenFromAddressListsEnabled
     }
 }
-#========================================================================
+#======================================
 # FUNCTION: VERIFY DELIVERY OPTIONS
-#========================================================================
+#======================================
 function VerifyDeliveryOptions {
     Write-Host 'INPUT filename.' -Fore Cyan -Back DarkBlue
     $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)'
@@ -235,105 +275,156 @@ function VerifyDeliveryOptions {
   }
 }
 #==============================================================================
-# FUNCTION: Load Main Menu
 #==============================================================================
-function LoadMenuSystem () {
-    [INT]$xMenu1=0
-    [INT]$xMenu2=0
-    [BOOLEAN]$xValidSelection=$false
-    while ( $xMenu1 -lt 1 -or $xMenu1 -gt 4 ){
-    CLS
+#==============================================================================
+# MENU: Special Delivery Menu
+#==============================================================================
+Function thinkSpecialDelivery {
+Function showMenuSpecialDelivery {
+    Param (
+        [Parameter(Position=0,Mandatory=$TRUE,HelpMessage="Special Delivery Menu Help text")] [ValidateNotNullOrEmpty()] [string]$menuSpecialDelivery,
+        [Parameter(Position=1)] [ValidateNotNullOrEmpty()] [string]$TitleSpecialDelivery="menuSpecialDelivery",
+        [switch] $clearScreen
+    )
+    if ($clearScreen) {Clear-Host}
+    Write-Host "`n`t$xAppName`n" -fore Magenta
+    $menuSpecialDeliveryPrompt = $titleSpecialDelivery
+    $menuSpecialDeliveryPrompt += "`n`t"
+    $menuSpecialDeliveryPrompt += "="*$titleSpecialDelivery.Length
+    $menuSpecialDeliveryPrompt += "`n"
+    $menuSpecialDeliveryPrompt += $menuSpecialDelivery
+    Read-Host -Prompt $menuSpecialDeliveryPrompt
+}
+$menuSpecialDelivery=@"
+    1 Setup Dual Delivery
+    2 Setup Split Delivery
+    3 Setup & Restrict Delivery
+    M Main Menu
+
+    Select a task by number or M
+"@
+Do {
+    Switch (showMenuSpecialDelivery $menuSpecialDelivery "`tSpecial Delivery Tasks" -clearScreen) {
+        "1" { SetupDualDelivery }
+        "2" { SetupSplitDelivery }
+        "3" { setupAndRestrictDelivery }
+        "M" { Return }
+        Default { Write-Warning "Special Delivery MENU: Invalid Choice. Try again.";sleep -seconds 1 }
+    }
+} While ($TRUE) 
+}
+#==============================================================================
+# MENU: MAILBOX PERMISSIONS
+#==============================================================================
+Function thinkMenuMailboxPermissions {
+Function showMenuMailboxPermissions {
+    Param(
+    [Parameter(Position=0,Mandatory=$TRUE,HelpMessage="Mailbox Permissions Menu Help text")] [ValidateNotNullOrEmpty()] [string]$menuMailboxPermissions,
+    [Parameter(Position=1)] [ValidateNotNullOrEmpty()] [string]$TitleMailboxPermissions="menuMailboxPermissions" ,
+    [switch]$clearScreen
+    )
+    if ($clearScreen) {Clear-Host}
     Write-Host "`n`t$xAppName`n" -Fore Magenta
-    Write-Host "`t`tPlease select an option`n" -Fore Cyan
-    Write-Host "`t`t`t1. Query Exchange Properties" -Fore Cyan
-    Write-Host "`t`t`t2. Query Multiple Mailbox Properties" -Fore Cyan
-    Write-Host "`t`t`t3. Special Delivery" -Fore Cyan
-    Write-Host "`t`t`t4. Quit and exit`n" -Fore Cyan
-    [int]$xMenu1 = Read-Host "`t`tEnter Menu Option Number"
-        if( $xMenu1 -lt 1 -or $xMenu1 -gt 4 ){
-        Write-Host "`tPlease select one of the options available.`n" -Fore Red;start-Sleep -Seconds 1
-        }
+    $menuMailboxPermissionsPrompt=$titleMailboxPermissions
+    $menuMailboxPermissionsPrompt+="`n`t"
+    $menuMailboxPermissionsPrompt+="="*$titleMailboxPermissions.Length
+    $menuMailboxPermissionsPrompt+="`n"
+    $menuMailboxPermissionsPrompt+=$menuMailboxPermissions
+    Read-Host -Prompt $menuMailboxPermissionsPrompt
+}
+$menuMailboxPermissions=@"
+    1 Who has Full Access?
+    2 Who has Send On Behalf Access?
+    3 Who has Send As Access?
+    M Main Menu
+
+    Select a task by number or M
+"@
+Do {
+    Switch (showMenuMailboxPermissions $menuMailboxPermissions "`tMailbox Permissions Tasks" -clearScreen) {
+        "1" { GetFullAccess }
+        "2" { GetSendOnBehalfAccess }
+        "3" { GetSendAsAccess }
+        "M" { Return }
+        Default { Write-Warning "Mailbox Permissions MENU: Invalid Choice. Try again.";sleep -seconds 1 }
     }
-    switch ($xMenu1){    #… User has selected a valid entry.. load next menu
-    #==============================================================================
-    # MENU: Exchange Properties
-    #==============================================================================
-1 {
-    while ( $xMenu2 -lt 1 -or $xMenu2 -gt 4 ){
-    CLS
+} While ($TRUE) 
+}
+#==============================================================================
+# MENU: EXCHANGE SYSTEM PROPERTIES
+#==============================================================================
+Function thinkMenuExchange {
+Function showMenuExchange {
+    Param(
+    [Parameter(Position=0,Mandatory=$TRUE,HelpMessage="Exchange Menu Help Text")] [ValidateNotNullOrEmpty()] [string]$menuExchange,
+    [Parameter(Position=1)] [ValidateNotNullOrEmpty()] [string]$TitleExchange="menuExchange" ,
+    [switch]$clearScreen
+    )
+    if ($clearScreen) {Clear-Host}
     Write-Host "`n`t$xAppName`n" -Fore Magenta
-    Write-Host "`t`tPlease select an option`n" -Fore Green
-    Write-Host "`t`t`t1. Exchange Schema Versions" -Fore Green
-    Write-Host "`t`t`t2. Exchange Server Names and Versions" -Fore Green
-    Write-Host "`t`t`t3. $unAss" -Fore DarkGreen
-    Write-Host "`t`t`t4. Go to Main Menu`n" -Fore Green
-    [int]$xMenu2 = Read-Host "`t`tEnter Menu Option Number"
-        if( $xMenu1 -lt 1 -or $xMenu1 -gt 4 ){
-        Write-Host "`tPlease select one of the options available.`n" -Fore Red;start-Sleep -Seconds 1
+    $menuExchangePrompt=$titleExchange
+    $menuExchangePrompt+="`n`t"
+    $menuExchangePrompt+="="*$titleExchange.Length
+    $menuExchangePrompt+="`n"
+    $menuExchangePrompt+=$menuExchange
+    Read-Host -Prompt $menuExchangePrompt
+}
+$menuExchange=@"
+    1 GetExchangeSchemaVerions
+    2 GetExchangeServerNamesADV
+    3 $unAss
+    M Main Menu
+
+    Select a task by number or M
+"@
+Do {
+    Switch (showMenuExchange $menuExchange "`tExchange Tasks" -clearScreen) {
+        "1" { GetExchangeSchemaVerions }
+        "2" { GetExchangeServerNamesADV }
+        "3" { Write-Host $unAss -fore Yellow -back blue; sleep -seconds 1 }
+        "M" { Return }
+        Default { Write-Warning "Exchange MENU: Invalid Choice. Try again.";sleep -seconds 1 }
+    }
+} While ($TRUE)
+}
+#==============================================================================
+# MENU: MAIN APPLICATION MENU
+#==============================================================================
+Function thinkMenuMain {
+    Function showMenuMain {
+        Param(
+        [Parameter(Position=0,Mandatory=$TRUE,HelpMessage="Main Menu Help text")] [ValidateNotNullOrEmpty()] [string]$menuMain,
+        [Parameter(Position=1)] [ValidateNotNullOrEmpty()] [string]$TitleMain="menuMain" ,
+        [switch]$clearScreen
+        )
+        if ($clearScreen) {Clear-Host}
+        Write-Host "`n`t$xAppName`n" -Fore Magenta
+        $menuMainPrompt = $titleMain
+        $menuMainPrompt += "`n`t"
+        $menuMainPrompt += "="*$titleMain.Length
+        $menuMainPrompt += "`n"
+        $menuMainPrompt += $menuMain
+        Read-Host -Prompt $menuMainPrompt
+    }
+$menuMain=@"
+    1 Query Exchange System
+    2 Query Multiple Mailbox Properties
+    3 Special Delivery
+    Q Quit
+
+    Select a task by number or Q to quit
+"@
+    Do {
+        Switch (showMenuMain $menuMain "`tBAM! Operations" -clearScreen) {
+            "1" { thinkMenuExchange }
+            "2" { thinkMenuMailboxPermissions }
+            "3" { thinkSpecialDelivery }
+            "Q" { Write-Host "Have a nice day..." -fore Yellow -back darkBlue; sleep -milliseconds 300; 
+                  Write-Host "Goodbye..." -fore cyan -back darkBlue;sleep -milliseconds 300; 
+                  Return }
+            Default { Write-Warning "MAIN MENU: Invalid Choice. Try again.";sleep -seconds 1 }
         }
-    }
-        switch ($xMenu2){
-    1 { GetExchangeSchemaVerions }
-    2 { GetExchangeServerNamesADV }
-    3 { Write-Host "`n`t$unAss`n" -Fore Yellow;start-Sleep -Seconds 1 }
-    default { Write-Host "`n`tYou Selected Option 4 – Quit the Administration Tasks`n" -Fore Yellow; break }
-    }
+    } While ($TRUE)
 }
-    #==============================================================================
-    # MENU: Query Multiple Mailbox Properties
-    #==============================================================================
-2 {
-    while ( $xMenu2 -lt 1 -or $xMenu2 -gt 4 ){
-    CLS
-    Write-Host "`n`t$xAppName`n" -Fore Magenta
-    Write-Host "`t`tPlease select an option`n" -Fore Green
-    Write-Host "`t`t`t1. Who's got Full Access" -Fore Green
-    Write-Host "`t`t`t2. Who's got Send On Behalf Access" -Fore Green
-    Write-Host "`t`t`t3. Who's got Send-As Access" -Fore Green
-    Write-Host "`t`t`t4. Go to Main Menu`n" -Fore Green
-    [int]$xMenu2 = Read-Host "`t`tEnter Menu Option Number"
-    }
-        if( $xMenu1 -lt 1 -or $xMenu1 -gt 4 ){
-        Write-Host "`tPlease select one of the options available.`n" -Fore Red;start-Sleep -Seconds 1
-        }
-    switch ($xMenu2){
-    1 { GetFullAccess }
-    2 { GetSendOnBehalfAccess }
-    3 { GetSendAsAccess }
-    default { Write-Host "`n`tYou Selected Option 4 – Go to Main Menu`n" -Fore Yellow; break }
-    }
-}
-    #==============================================================================
-    # MENU: Special Delivery Menu
-    #==============================================================================
-3 {
-    while ( $xMenu2 -lt 1 -or $xMenu2 -gt 4 ){
-    CLS
-    Write-Host "`n`t$xAppName`n" -Fore Magenta
-    Write-Host "`t`tPlease select an option`n" -Fore Green
-    Write-Host "`t`t`t1. Set Dual-Delivery" -Fore Green
-    Write-Host "`t`t`t2. Set Split-Delivery" -Fore Green
-    Write-Host "`t`t`t3. Special Delivery Report" -Fore Green
-    Write-Host "`t`t`t4. Go to Main Menu`n" -Fore Green
-    [int]$xMenu2 = Read-Host "`t`tEnter Menu Option Number"
-        if( $xMenu1 -lt 1 -or $xMenu1 -gt 4 ){
-        Write-Host "`tPlease select one of the options available.`n" -Fore Red;start-Sleep -Seconds 1
-        }
-    }
-    switch ($xMenu2){
-    1 { SetupDualDelivery }
-    2 { SetupSplitDelivery }
-    3 { Write-Host "`n`t$unAss`n" -Fore Yellow;start-Sleep -Seconds 1 }
-    default { Write-Host "`n`tYou Selected Option 4 – Go to Main Menu`n" -Fore Yellow; break }
-    }
-}
-default { $global:xExitSession=$true;break }
-}
-}
-LoadMenuSystem
-if ($xExitSession){
-Exit-PSSession
-} else {
-.\BAMex.ps1
-$CurProcMbx = 1
-}
+#==============================================================================
+thinkMenuMain
