@@ -12,7 +12,7 @@ function time_pipeline {
 	process {
     	$i++
     	if (!($i % $increment)) {
-    		Write-Host “`rProcessed $i in $($timer.elapsed.totalseconds) seconds” -NoNewLine
+    		Write-Host "`rProcessed $i in $($timer.elapsed.totalseconds) seconds" -NoNewLine
     	}
     $_
     }
