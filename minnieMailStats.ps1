@@ -1,9 +1,8 @@
-#
 # create a local event log named emailstats
 # Example: new-Eventlog -LogName "emailstats" -Source "emailstatsSource"
 $hts = get-exchangeserver |? {$_.serverrole -match "hubtransport"} |% {$_.name}
-$startdate = "01/27/2014 12:01:01 AM"
-$enddate = "02/02/2014 11:59:50 PM"
+$startdate = "{0:yyyyMMdd}" -f (get-date).AddDays(-8)
+$enddate = "{0:yyyyMMdd}" -f (get-date).AddDays(-1)
 
 function time_pipeline {
 param ($increment  = 1000)
