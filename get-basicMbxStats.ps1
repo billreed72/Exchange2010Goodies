@@ -10,20 +10,19 @@ function GetMailboxStats {
         $StatList += $UserID
         foreach ($USerID in $StatList) {
             If ($UserID -ne $NULL) {
-#            $OutStatObject = "" | select DisplayName,Mailbox,ItemCount,TotalItemSize,LastLogonTime,Server,OriginatingServer,Database,ObjectClass
-#            $OutStatObject = "" | select DisplayName,Mailbox,ItemCount,TotalItemSize
+#           $OutStatObject = "" | select DisplayName,Mailbox,ItemCount,TotalItemSize,LastLogonTime,Server,OriginatingServer,Database,ObjectClass
+#           $OutStatObject = "" | select DisplayName,Mailbox,ItemCount,TotalItemSize
             $OutStatObject = "" | select Mailbox,ItemCount,TotalItemSize
-#            $OutStatObject.DisplayName = (Get-MailboxStatistics -Identity $UserID).DisplayName
+#           $OutStatObject.DisplayName = (Get-MailboxStatistics -Identity $UserID).DisplayName
             $OutStatObject.Mailbox = $UserID
             $OutStatObject.ItemCount = (Get-MailboxStatistics -Identity $UserID).ItemCount
             $OutStatObject.TotalItemSize = (Get-MailboxStatistics -Identity $UserID).TotalItemSize
- #           $OutStatObject.LastLogonTime = (Get-MailboxStatistics -Identity $UserID).LastLogonTime
- #           $OutStatObject.Server = (Get-MailboxStatistics -Identity $UserID).Server
- #           $OutStatObject.OriginatingServer = (Get-MailboxStatistics -Identity $UserID).OriginatingServer
- #           $OutStatObject.Database = (Get-MailboxStatistics -Identity $UserID).Database
- #           $OutStatObject.ObjectClass = (Get-MailboxStatistics -Identity $UserID).ObjectClass
+#           $OutStatObject.LastLogonTime = (Get-MailboxStatistics -Identity $UserID).LastLogonTime
+#           $OutStatObject.Server = (Get-MailboxStatistics -Identity $UserID).Server
+#           $OutStatObject.OriginatingServer = (Get-MailboxStatistics -Identity $UserID).OriginatingServer
+#           $OutStatObject.Database = (Get-MailboxStatistics -Identity $UserID).Database
+#           $OutStatObject.ObjectClass = (Get-MailboxStatistics -Identity $UserID).ObjectClass
             $OutStatData += $OutStatObject
-            $OutObject
             }
         $CurProcMbxStat++
         }
@@ -36,7 +35,8 @@ function GetMailboxStats {
 Measure-Command { GetMailboxStats }
 
 <#
-Running with only Mailbox, ItemCount, TotalItemSize
+Running with selected:
+Mailbox, ItemCount, TotalItemSize
 
 Days              : 0
 Hours             : 0
@@ -50,7 +50,8 @@ TotalMinutes      : 0.680973981666667
 TotalSeconds      : 40.8584389
 TotalMilliseconds : 40858.4389
 
-Running with selected: DisplayName,Mailbox,ItemCount,TotalItemSize
+Running with selected: 
+DisplayName,Mailbox,ItemCount,TotalItemSize
 
 Days              : 0
 Hours             : 0
@@ -65,7 +66,8 @@ TotalSeconds      : 44.125598
 TotalMilliseconds : 44125.598
 
 
-Running with selected: DisplayName,Mailbox,ItemCount,TotalItemSize,LastLogonTime,Server,OriginatingServer,Database,ObjectClass
+Running with selected: 
+DisplayName,Mailbox,ItemCount,TotalItemSize,LastLogonTime,Server,OriginatingServer,Database,ObjectClass
 
 Days              : 0
 Hours             : 0
