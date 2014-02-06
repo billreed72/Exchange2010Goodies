@@ -1,3 +1,9 @@
+#========================================================================
+# Created on:   Feb 6, 2014 13:00:00 EST
+# Created by:   William Reed, wreed@appirio.com
+# Organization: Appirio, Inc.
+# Usage:	./BAMforColumbia.ps1
+#========================================================================
 $xAppName = "BAM! Version 1.0 (Bill's Application Manager) `n`tCustomized for Columbia University"
 $unAss = "***[Unassigned]***"
 $BamLogName = "BAMex"
