@@ -27,8 +27,8 @@ function GetMailboxFolderMsgCountsAndSize {
     $SavePathFolderStatdata = ('MailboxFolderStats-{1:yyyyMMddHHmmss}.csv' -f $env:COMPUTERNAME,(Get-Date))
     $OutMFSdata | Export-csv  -Path $SavePathFolderStatdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
-    Write-Host $SavePathStatdata -Fore DarkRed -Back gray;start-sleep -seconds 1
-    write-EventLog -LogName $BamLogName -EventID 6 -Message "Results: Get Mailbox Folder Total Message Counts & Sizes saved: [$SavePathStatdata]." -Source $BamLogSource -EntryType Information
+    Write-Host $SavePathFolderStatdata -Fore DarkRed -Back gray;start-sleep -seconds 1
+    write-EventLog -LogName $BamLogName -EventID 6 -Message "Results: Get Mailbox Folder Total Message Counts & Sizes saved: [$SavePathFolderStatdata]." -Source $BamLogSource -EntryType Information
 }
 #======================================
 # FUNCTION: Get Mailbox Total Message Count & Size
