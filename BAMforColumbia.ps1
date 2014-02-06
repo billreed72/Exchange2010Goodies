@@ -22,7 +22,7 @@ function GetMailboxFolderMsgCountsAndSize {
     $OutMFSdata | Export-csv  -Path $SavePathFolderStatdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathStatdata -Fore DarkRed -Back gray;start-sleep -seconds 1
-    write-EventLog -LogName $BamLogName -EventID 11 -Message "Results: Get Mailbox Folder Total Message Counts & Sizes saved: [$SavePathStatdata]." -Source $BamLogSource -EntryType Information
+    write-EventLog -LogName $BamLogName -EventID 6 -Message "Results: Get Mailbox Folder Total Message Counts & Sizes saved: [$SavePathStatdata]." -Source $BamLogSource -EntryType Information
 }
 #======================================
 # FUNCTION: Get Mailbox Total Message Count & Size
@@ -55,7 +55,7 @@ function GetMailboxMsgCountsAndSize {
     $OutStatData | Export-csv  -Path $SavePathStatdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathStatdata -Fore DarkRed -Back gray;start-sleep -seconds 1
-    write-EventLog -LogName $BamLogName -EventID 12 -Message "Results: Get Mailbox Total Message Count & Size saved: [$SavePathStatdata]." -Source $BamLogSource -EntryType Information
+    write-EventLog -LogName $BamLogName -EventID 7 -Message "Results: Get Mailbox Total Message Count & Size saved: [$SavePathStatdata]." -Source $BamLogSource -EntryType Information
 }
 #======================================
 # FUNCTION: Exchange Schema Versions
@@ -94,7 +94,7 @@ function GetExchangeServerNamesADV {
     $ExchangeServerData | Export-csv  -Path $SavePathExServerData
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathExServerData -Fore DarkRed -Back gray;start-sleep -seconds 1
-    write-EventLog -LogName $BamLogName -EventID 1 -Message "Results: Exchange Server Names and Versions saved: [$SavePathExServerData]." -Source $BamLogSource -EntryType Information
+    write-EventLog -LogName $BamLogName -EventID 2 -Message "Results: Exchange Server Names and Versions saved: [$SavePathExServerData]." -Source $BamLogSource -EntryType Information
 }
 #======================================
 # FUNCTION: Get Full Access Permissions
@@ -125,7 +125,7 @@ function GetFullAccess {
     $OutFAData | Export-csv  -Path $SavePathFAdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathFAdata -Fore DarkRed -Back gray;start-sleep -seconds 1
-    write-EventLog -LogName $BamLogName -EventID 1 -Message "Results: Exchange Server Names and Versions saved: [$SavePathFAdata]." -Source $BamLogSource -EntryType Information
+    write-EventLog -LogName $BamLogName -EventID 3 -Message "Results: Get Full Access Permission saved: [$SavePathFAdata]." -Source $BamLogSource -EntryType Information
 }
 #======================================
 # FUNCTION: Get Send On Behalf Access Permissions
@@ -170,7 +170,7 @@ function GetSendOnBehalfAccess {
     $OutSOBData | Export-csv  -Path $SavePathSOBdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathSOBdata -Fore DarkRed -Back gray;start-sleep -seconds 1
-    write-EventLog -LogName $BamLogName -EventID 1 -Message "Results: Get Send On Behalf Access Permissions saved: [$SavePathSOBdata]." -Source $BamLogSource -EntryType Information
+    write-EventLog -LogName $BamLogName -EventID 4 -Message "Results: Get Send On Behalf Access Permissions saved: [$SavePathSOBdata]." -Source $BamLogSource -EntryType Information
 }
 #======================================
 # FUNCTION: Get Send As Access Permissions
@@ -205,7 +205,7 @@ function GetSendAsAccess {
     $OutSAData | Export-csv  -Path $SavePathSAdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathSAdata -Fore DarkRed -Back gray;start-sleep -seconds 1
-    write-EventLog -LogName $BamLogName -EventID 1 -Message "Results: Get Send As Access Permissions saved: [$SavePathSAdata]." -Source $BamLogSource -EntryType Information
+    write-EventLog -LogName $BamLogName -EventID 5 -Message "Results: Get Send As Access Permissions saved: [$SavePathSAdata]." -Source $BamLogSource -EntryType Information
 }
 
     #==============================================================================
