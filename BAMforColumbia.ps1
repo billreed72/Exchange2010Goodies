@@ -285,7 +285,7 @@ Function showMenuMailboxPermissions {
     #==============================================================================
 $menuMailboxPermissions=@"
     1 Query for Full Access
-    2 Query for Send On Behlaf Access
+    2 Query for Send On Behalf Access
     3 Query for Send As Access
     M Main Menu
 
