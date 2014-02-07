@@ -4,7 +4,7 @@
 # Organization: Appirio, Inc.
 # Usage:	./BAMforColumbia.ps1
 #========================================================================
-$xAppName = "BAM! Version 1.0 (Bill's Application Manager) `n`tCustomized for Columbia University"
+$xAppName = "BAM! Version 1.0 (Bill's Application Manager) `n`tColumbia University build"
 $unAss = "***[Unassigned]***"
 $BamLogName = "BAMex"
 $BamLogSource = "BAMSource"
@@ -18,6 +18,7 @@ function GetMailboxFolderMsgCountsAndSize {
     $OutMFSData = @()
     $UserList = Get-Content $UserListFile
     $CurProcMbxMFS = 1
+    write-EventLog -LogName $BamLogName -EventID 61 -Message "Results: Get Mailbox Folder Total Message Counts & Sizes saved: Started." -Source $BamLogSource -EntryType Information
     Foreach ($UserID in $UserList) {
         write-host -NoNewLine $CurProcMbxMFS -Fore Blue -Back White; write-host '.' -Fore Red -Back White -NoNewLine
         $FolderData = Get-MailboxFolderStatistics -Ide $UserID | Where {$_.Foldertype -ne "SyncIssues" -and $_.Foldertype -ne "Conflicts" -and $_.Foldertype -ne "LocalFailures" -and $_.Foldertype -ne "ServerFailures" -and $_.Foldertype -ne "RecoverableItemsRoot" -and $_.Foldertype -ne "RecoverableItemsDeletions" -and $_.Foldertype -ne "RecoverableItemsPurges" -and $_.Foldertype -ne "RecoverableItemsVersions" -and $_.Foldertype -ne "Root"} | select Identity,FolderPath,ItemsInFolder,FolderSize
@@ -28,7 +29,7 @@ function GetMailboxFolderMsgCountsAndSize {
     $OutMFSdata | Export-csv  -Path $SavePathFolderStatdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathFolderStatdata -Fore DarkRed -Back gray;start-sleep -seconds 1
-    write-EventLog -LogName $BamLogName -EventID 6 -Message "Results: Get Mailbox Folder Total Message Counts & Sizes saved: [$SavePathFolderStatdata]." -Source $BamLogSource -EntryType Information
+    write-EventLog -LogName $BamLogName -EventID 62 -Message "Results: Get Mailbox Folder Total Message Counts & Sizes saved: [$SavePathFolderStatdata]." -Source $BamLogSource -EntryType Information
 }
 #======================================
 # FUNCTION: Get Mailbox Total Message Count & Size
@@ -39,6 +40,7 @@ function GetMailboxMsgCountsAndSize {
     $OutStatData = @()
     $UserList = Get-Content $UserListFile
     $CurProcMbxStat = 1
+    write-EventLog -LogName $BamLogName -EventID 71 -Message "Results: Get Mailbox Total Message Count & Size saved: Started." -Source $BamLogSource -EntryType Information
     foreach ($UserID in $UserList) {
         Write-Host -NoNewLine $CurProcMbxStat -Fore Blue -Back White; write-host '.' -Fore Red -Back White -NoNewLine
         $StatList = @()
@@ -61,7 +63,7 @@ function GetMailboxMsgCountsAndSize {
     $OutStatData | Export-csv  -Path $SavePathStatdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathStatdata -Fore DarkRed -Back gray;start-sleep -seconds 1
-    write-EventLog -LogName $BamLogName -EventID 7 -Message "Results: Get Mailbox Total Message Count & Size saved: [$SavePathStatdata]." -Source $BamLogSource -EntryType Information
+    write-EventLog -LogName $BamLogName -EventID 72 -Message "Results: Get Mailbox Total Message Count & Size saved: [$SavePathStatdata]." -Source $BamLogSource -EntryType Information
 }
 #======================================
 # FUNCTION: Exchange Schema Versions
@@ -71,6 +73,7 @@ function GetExchangeSchemaVerions {
     $OutEXVdata = @()
     $ExForestAndDomain = Read-Host 'Please enter your forest and domain (i.e. DC=dev10,DC=net)'
     $ExOrg = Read-Host 'Please enter the Exchange Org Name (i.e. First Organization)'
+    write-EventLog -LogName $BamLogName -EventID 11 -Message "Results: Exchange Schema Versions saved: Started." -Source $BamLogSource -EntryType Information
     $ExchangeSchemaVersion = get-ADObject "CN=ms-Exch-Schema-Version-pt,CN=Schema,CN=Configuration,$ExForestAndDomain" -Property rangeUpper | select rangeUpper
     $ExchangeOrganizationForestVersion = get-ADObject "CN=$ExOrg,CN=Microsoft Exchange,CN=Services,CN=Configuration,$ExForestAndDomain" -Property objectVersion | select objectVersion
     $ExchangeOrganizationDomainVersion = get-ADObject "CN=Microsoft Exchange System Objects,$ExForestAndDomain" -Property objectVersion | select objectVersion
@@ -83,7 +86,7 @@ function GetExchangeSchemaVerions {
     $OutEXVdata | Export-csv  -Path $SavePathEXVdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathEXVdata -Fore DarkRed -Back gray;start-sleep -seconds 1
-    write-EventLog -LogName $BamLogName -EventID 1 -Message "Results: Exchange Schema Versions saved: [$SavePathEXVdata]." -Source $BamLogSource -EntryType Information
+    write-EventLog -LogName $BamLogName -EventID 12 -Message "Results: Exchange Schema Versions saved: [$SavePathEXVdata]." -Source $BamLogSource -EntryType Information
 }
 #======================================
 # FUNCTION: Exchange Server Names and Versions
@@ -91,6 +94,7 @@ function GetExchangeSchemaVerions {
 function GetExchangeServerNamesADV {
     Import-Module ActiveDirectory
     $ExchangeServerData = @()
+    write-EventLog -LogName $BamLogName -EventID 21 -Message "Results: Exchange Server Names and Versions saved: Started." -Source $BamLogSource -EntryType Information
     $AdminDisplayVersion = get-exchangeServer | select *
     $OutDVer = "" | select Name,ADV
     $OutDVer.Name = $AdminDisplayVersion.Name
@@ -100,7 +104,7 @@ function GetExchangeServerNamesADV {
     $ExchangeServerData | Export-csv  -Path $SavePathExServerData
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathExServerData -Fore DarkRed -Back gray;start-sleep -seconds 1
-    write-EventLog -LogName $BamLogName -EventID 2 -Message "Results: Exchange Server Names and Versions saved: [$SavePathExServerData]." -Source $BamLogSource -EntryType Information
+    write-EventLog -LogName $BamLogName -EventID 22 -Message "Results: Exchange Server Names and Versions saved: [$SavePathExServerData]." -Source $BamLogSource -EntryType Information
 }
 #======================================
 # FUNCTION: Get Full Access Permissions
@@ -111,6 +115,7 @@ function GetFullAccess {
     $OutFAData = @()
     $UserList = Get-Content $UserListFile
     $CurProcMbxFA = 1
+    write-EventLog -LogName $BamLogName -EventID 31 -Message "Results: Get Full Access Permission saved: Started." -Source $BamLogSource -EntryType Information
     foreach ($UserID in $UserList) {
         Write-Host -NoNewLine $CurProcMbxFA -Fore Blue -Back White; write-host '.' -Fore Red -Back White -NoNewLine
         $GrantedFullAccessList = @()
@@ -131,7 +136,7 @@ function GetFullAccess {
     $OutFAData | Export-csv  -Path $SavePathFAdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathFAdata -Fore DarkRed -Back gray;start-sleep -seconds 1
-    write-EventLog -LogName $BamLogName -EventID 3 -Message "Results: Get Full Access Permission saved: [$SavePathFAdata]." -Source $BamLogSource -EntryType Information
+    write-EventLog -LogName $BamLogName -EventID 32 -Message "Results: Get Full Access Permission saved: [$SavePathFAdata]." -Source $BamLogSource -EntryType Information
 }
 #======================================
 # FUNCTION: Get Send On Behalf Access Permissions
@@ -142,6 +147,7 @@ function GetSendOnBehalfAccess {
     $OutSOBData = @()
     $UserList = Get-Content $UserListFile
     $CurProcMbxSOB = 1
+    write-EventLog -LogName $BamLogName -EventID 41 -Message "Results: Get Send On Behalf Access Permissions saved: Started." -Source $BamLogSource -EntryType Information
     function RecExpand ($grpn) {
         $grpfinal= @()
         $grp = Get-DistributionGroupMember -Identity $grpn -ResultSize unlimited
@@ -176,7 +182,7 @@ function GetSendOnBehalfAccess {
     $OutSOBData | Export-csv  -Path $SavePathSOBdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathSOBdata -Fore DarkRed -Back gray;start-sleep -seconds 1
-    write-EventLog -LogName $BamLogName -EventID 4 -Message "Results: Get Send On Behalf Access Permissions saved: [$SavePathSOBdata]." -Source $BamLogSource -EntryType Information
+    write-EventLog -LogName $BamLogName -EventID 42 -Message "Results: Get Send On Behalf Access Permissions saved: [$SavePathSOBdata]." -Source $BamLogSource -EntryType Information
 }
 #======================================
 # FUNCTION: Get Send As Access Permissions
@@ -187,6 +193,7 @@ function GetSendAsAccess {
     $OutSAData = @()
     $UserList = Get-Content $UserListFile
     $CurProcMbxSA = 1
+    write-EventLog -LogName $BamLogName -EventID 51 -Message "Results: Get Send As Access Permissions saved: Started." -Source $BamLogSource -EntryType Information
     foreach ($UserID in $UserList) {
         Write-Host -NoNewLine $CurProcMbxSA -Fore Blue -Back White; write-host '.' -Fore Red -Back White -NoNewLine
         $ADIDList = @()
@@ -211,7 +218,7 @@ function GetSendAsAccess {
     $OutSAData | Export-csv  -Path $SavePathSAdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathSAdata -Fore DarkRed -Back gray;start-sleep -seconds 1
-    write-EventLog -LogName $BamLogName -EventID 5 -Message "Results: Get Send As Access Permissions saved: [$SavePathSAdata]." -Source $BamLogSource -EntryType Information
+    write-EventLog -LogName $BamLogName -EventID 52 -Message "Results: Get Send As Access Permissions saved: [$SavePathSAdata]." -Source $BamLogSource -EntryType Information
 }
 
     #==============================================================================
@@ -278,7 +285,7 @@ Function showMenuMailboxPermissions {
     #==============================================================================
 $menuMailboxPermissions=@"
     1 Query for Full Access
-    2 Query for Send On Behalf Access
+    2 Query for Send On Behlaf Access
     3 Query for Send As Access
     M Main Menu
 
