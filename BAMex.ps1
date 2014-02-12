@@ -312,7 +312,7 @@ function ValidateDDContactData {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # FUNCTION: VERIFY SPLIT DELIVERY CONTACT DATA
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-function ValidateDDContactData {
+function ValidateSDContactData {
     Write-Host 'INPUT filename.' -Fore Cyan -Back DarkBlue
     $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)'
     $UserList = Get-Content $UserListFile  
@@ -326,16 +326,31 @@ function ValidateDDContactData {
     }
 }
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# FUNCTION: VERIFY DELIVERY OPTIONS
+# FUNCTION: REPORT ON DELIVERY OPTIONS
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-function VerifyDeliveryOptions {
+function VerifyDualDelivery {
     Write-Host 'INPUT filename.' -Fore Cyan -Back DarkBlue
     $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)'
+    $OutDDData = @()
     $UserList = Get-Content $UserListFile 
+    $CurrProcVDD = 1
+    write-EventLog -LogName $BamLogName -EventID 99 -Message "Dual Delivery Report: Started." -Source $BamLogSource -EntryType Information
     foreach ($UserID in $UserList) {
-        $A = (Get-recipient $UserID).alias
-        Get-Mailbox $A | select Name, ForwardingAddress, DeliverToMailboxAndForward
-  }
+        If ($UserID -ne $NULL) {
+        write-host -NoNewLine $CurrProcVDD -Fore Blue -Back White; write-host '.' -Fore Red -Back White -NoNewLine
+        $OutDDObject = "" | select Mailbox,FwdSMTPAddress,DeliverToMailboxAndForward
+        $OutDDObject.Mailbox = (get-mailbox $UserID).primarySMTPAddress
+        $OutDDObject.FwdSMTPAddress = (get-recipient (get-mailbox $UserID).ForwardingAddress).primarySMTPAddress
+        $OutDDObject.DeliverToMailboxAndForward = (get-mailbox $UserID).DeliverToMailboxAndForward
+        $OutDDData += $OutDDObject
+        }
+    $CurrProcVDD++
+    }
+    $SavePathVDDdata = ('SpecDeliveryReport-{1:yyyyMMddHHmmss}.csv' -f $env:COMPUTERNAME,(Get-Date))
+    $OutDDData | Export-csv  -Path $SavePathVDDdata
+    Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
+    Write-Host $SavePathVDDdata -Fore DarkRed -Back gray;start-sleep -seconds 1
+    write-EventLog -LogName $BamLogName -EventID 99 -Message "Results: Special Delivery Method Report saved: [$SavePathVDDdata]." -Source $BamLogSource -EntryType Information
 }
 #=================================
 # MENU: Special Delivery Menu
@@ -357,21 +372,24 @@ Function showMenuSpecialDelivery {
     Read-Host -Prompt $menuSpecialDeliveryPrompt
 }
 $menuSpecialDelivery=@"
-  SPECIAL DELIVERY OPTIONS:
-    1 Dual Delivery: Add Mailboxes
-    2 Dual Delivery: Remove Mailboxes
+  Dual Delivery Tasks:
+    1 Add Mailboxes
+    2 Remove Mailboxes
+
+  Split Delivery Tasks:
+    3 Add Mailboxes
+    4 Remove Mailboxes
     
-    3 Split Delivery: Add Mailboxes
-    4 Split Delivery: Remove Mailboxes
-    
-    5 Verify Delivery Options
+    5 Special Delivery: Report
+    6 Special Delivery: Teardown
  
-  DENY DELIVERY OPTIONS:
-    6 Deny Delivery: Setup
-    7 Deny Delivery: Add Mailboxes
-    8 Deny Delivery: Remove Mailboxes
-    9 Deny Delivery: Tear-Down
+  DENY Delivery Tasks:
+    7 Setup Denied Delivery
+    8 Add Mailboxes
+    9 Remove Mailboxes
+    
     10 Deny Delivery: Report
+    11 Deny Delivery: Teardown
     
     M Main Menu
 
@@ -381,14 +399,15 @@ Do {
     Switch (showMenuSpecialDelivery $menuSpecialDelivery "`tSpecial Delivery Menu" -clearScreen) {
         "1" { SetupDualDelivery }
         "2" { write-host 'test2' -fore green;start-sleep -seconds 1 }
-        "3" { SetupDualDelivery }
+        "3" { SetupSplitDelivery }
         "4" { write-host 'test4' -fore green;start-sleep -seconds 1 }
-        "5" { write-host 'test5' -fore green;start-sleep -seconds 1 }
-        "6" { setupAndRestrictDelivery }
-        "7" { write-host 'test7' -fore green;start-sleep -seconds 1 }
+        "5" { VerifyDualDelivery }
+        "6" { write-host 'test6' -fore green;start-sleep -seconds 1 }
+        "7" { setupAndRestrictDelivery }
         "8" { write-host 'test8' -fore green;start-sleep -seconds 1 }
         "9" { write-host 'test9' -fore green;start-sleep -seconds 1 }
-        "10" { write-host 'test10' -fore green;start-sleep -seconds 1 }                
+        "10" { write-host 'test10' -fore green;start-sleep -seconds 1 }
+        "11" { write-host 'test11' -fore green;start-sleep -seconds 1 }
         "M" { Return }
         Default { Write-Warning "Special Delivery MENU: Invalid Choice. Try again.";sleep -seconds 1 }
     }
