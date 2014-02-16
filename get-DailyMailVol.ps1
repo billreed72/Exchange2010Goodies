@@ -1,5 +1,7 @@
 $End = Get-Date
-$xStart = Read-Host "How many days back?"
+$xStart=read-host "How many days back? [default 7 days]"
+if($xStart -eq $null){$xStart=7}
+if($xStart -eq ""){$xStart=7}
 $Start = $End.AddDays(-$xStart)
 [Int64] $intSent = $intRec = 0
 [Int64] $intSentSize = $intRecSize = 0
@@ -9,7 +11,7 @@ $Start = $End.AddDays(-$xStart)
 # Use this line for running against all production Hubs
 $hts = get-exchangeserver |? {$_.serverrole -match "hubtransport"} |% {$_.name}
 Write-Host "DayOfWeek,Date,Sent,Sent Size,Received,Received Size" -ForegroundColor Yellow -BackgroundColor DarkBlue
-
+"DayOfWeek,Date,Sent,Sent Size,Received,Received Size,$End " >> DailyStats.txt
 # Start building the variable that will hold the information for the day
 Do {
     $strEmails = "$($Start.DayOfWeek),$($Start.ToShortDateString()),"
