@@ -1,34 +1,31 @@
-# create a local event log named emailstats
-# Example: new-Eventlog -LogName "emailstats" -Source "emailstatsSource"
-$hts = get-exchangeserver | ? {$_.serverrole -match "hubtransport"} | % {$_.name}
-$startdate = "{0:yyyyMMdd}" -f (get-date).AddDays(-8)
-$enddate = "{0:yyyyMMdd}" -f (get-date).AddDays(-1)
-
+$hts = get-exchangeserver |? {$_.serverrole -match "hubtransport"} |% {$_.name}
+$startdate = Read-Host "Start Date"
+$enddate = Read-Host "End Date"
 function time_pipeline {
-	param ($increment  = 1000) begin { 
-		$i = 0;
-		$timer = [diagnostics.stopwatch]::startnew()
-	}
-	process {
-    	$i++
-    	if (!($i % $increment)) {
-    		Write-Host "`rProcessed $i in $($timer.elapsed.totalseconds) seconds" -NoNewLine
-    	}
+param ($increment  = 1000)
+begin{$i=0;$timer = [diagnostics.stopwatch]::startnew()}
+process {
+    $i++
+    if (!($i % $increment)){Write-host “Processed $i in $($timer.elapsed.totalseconds) seconds” -nonewline}
     $_
     }
-	end {
-		Write-Host "`rProcessed $i log records in $($timer.elapsed.totalseconds) seconds"
-		Write-Host "   Average rate: $([int]($i/$timer.elapsed.totalseconds)) log recs/sec."
-		}
+end {
+	write-host “Processed $i log records in $($timer.elapsed.totalseconds) seconds”
+	Write-Host "Average rate: $([int]($i/$timer.elapsed.totalseconds)) log recs/sec."
+    write-EventLog -LogName "BAMex" -Message “`rProcessed $i log records in $($timer.elapsed.totalseconds) seconds
+Average rate: $([int]($i/$timer.elapsed.totalseconds)) log recs/sec” -Source "BAMex" -EventID 666 -EntryType Information
+	}
 }
-
 function miniemailstats {
-	get-messagetrackinglog -Server $ht -EventID "DELIVER" -Start $startdate -End $enddate -resultsize unlimited | time_pipeline | %{$count++}
-	Write-Host 'Server $ht Message count ' $count
-	Write-EventLog -logName "emailstats" -eventID 666 -message "Email Server $ht Stat Count $count number of messages between dates $startdate and $enddate " -Source "emailstats" -EntryType Information
+get-messagetrackinglog -Server $ht -EventID "DELIVER" -Start $startdate -End $enddate -resultsize unlimited | time_pipeline | %{$count++}
+write-host "Server:" $ht 
+write-host "Messages Inbound:" $count
+write-EventLog -LogName "BAMex" -EventID 666 -Message "Exchange Server: $ht
+Messages: $count
+Start Date: $startdate
+End Date: $enddate " -Source "BAMex" -EntryType Information
 }
-
-foreach ($ht in $hts) {
-	$count=0
-	miniemailstats
+foreach ($ht in $hts){
+$count=0
+miniemailstats
 }
