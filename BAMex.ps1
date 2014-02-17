@@ -590,8 +590,8 @@ Function showMenuExchange {
 $menuExchange=@"
     1 Active Directory & Exchange Schema Versions
     2 Exchange Server(s) Admin Display Version(s)
-    3 $messageVolStatsToEventLog
-    4 $dailyMailVolStats
+    3 Write Message Volume Stats to Event Log
+    4 Append Daily Message Volume Stats to DailyStats.txt
     5 $unAss
     M Main Menu
 
@@ -601,7 +601,9 @@ Do {
     Switch (showMenuExchange $menuExchange "`tExchange Properties Menu" -clearScreen) {
         "1" { GetExchangeSchemaVerions }
         "2" { GetExchangeServerNamesADV }
-        "3" { Write-Host $unAss -fore Yellow -back blue; sleep -seconds 1 }
+        "3" { messageVolStatsToEventLog }
+        "4" { dailyMailVolStats }
+        "5" { Write-Host $unAss -fore Yellow -back blue; sleep -seconds 1 }
         "M" { Return }
         Default { Write-Warning "Exchange MENU: Invalid Choice. Try again.";sleep -seconds 1 }
     }
