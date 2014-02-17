@@ -48,6 +48,87 @@ function GetExchangeServerNamesADV {
     Write-Host $SavePathExServerData -Fore DarkRed -Back gray;start-sleep -seconds 1
 }
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# FUNCTION: Message Volume Stats to Event Logs
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function messageVolStatsToEventLog {
+    $hts = get-exchangeserver |? {$_.serverrole -match "hubtransport"} |% {$_.name}
+    $startdate = Read-Host "Start Date"
+    $enddate = Read-Host "End Date"
+    function time_pipeline {
+    param ($increment  = 1000)
+    begin{$i=0;$timer = [diagnostics.stopwatch]::startnew()}
+    process {
+        $i++
+        if (!($i % $increment)){Write-host “Processed $i in $($timer.elapsed.totalseconds) seconds” -nonewline}
+        $_
+        }
+    end {
+        write-host “Processed $i log records in $($timer.elapsed.totalseconds) seconds”
+        Write-Host "Average rate: $([int]($i/$timer.elapsed.totalseconds)) log recs/sec."
+        write-EventLog -LogName "BAMex" -Message “`rProcessed $i log records in $($timer.elapsed.totalseconds) seconds
+    Average rate: $([int]($i/$timer.elapsed.totalseconds)) log recs/sec” -Source "BAMex" -EventID 666 -EntryType Information
+        }
+    }
+    function miniemailstats {
+    get-messagetrackinglog -Server $ht -EventID "DELIVER" -Start $startdate -End $enddate -resultsize unlimited | time_pipeline | %{$count++}
+    write-host "Server:" $ht 
+    write-host "Messages Inbound:" $count
+    write-EventLog -LogName "BAMex" -EventID 666 -Message "Exchange Server: $ht
+    Messages: $count
+    Start Date: $startdate
+    End Date: $enddate " -Source "BAMex" -EntryType Information
+    }
+    foreach ($ht in $hts){
+    $count=0
+    miniemailstats
+    }
+}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# FUNCTION: Daily Mail Volume Stats
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function dailyMailVolStats {
+    $End = Get-Date
+    $xStart=read-host "How many days back? [default 7 days]"
+    if($xStart -eq $null){$xStart=7}
+    if($xStart -eq ""){$xStart=7}
+    $Start = $End.AddDays(-$xStart)
+    [Int64] $intSent = $intRec = 0
+    [Int64] $intSentSize = $intRecSize = 0
+    [String] $strEmails = $null
+    # Use this line for testing in production against only 2 Hts
+    #$hts = get-exchangeserver |? {$_.serverrole -match "hubtransport" -and $_.name -like "*HubTransport02"} |% {$_.name}
+    # Use this line for running against all production Hubs
+    $hts = get-exchangeserver |? {$_.serverrole -match "hubtransport"} |% {$_.name}
+    Write-Host "DayOfWeek,Date,Sent,Sent Size,Received,Received Size" -ForegroundColor Yellow -BackgroundColor DarkBlue
+    "DayOfWeek,Date,Sent,Sent Size,Received,Received Size,$End " >> DailyStats.txt
+    # Start building the variable that will hold the information for the day
+    Do {
+        $strEmails = "$($Start.DayOfWeek),$($Start.ToShortDateString()),"
+        $intSent = $intRec = 0
+        $hts | Get-MessageTrackingLog -ResultSize Unlimited -Start $Start -End $End | ForEach {
+        # Sent E-mails
+        If ($_.EventId -eq "RECEIVE" -and $_.Source -eq "STOREDRIVER") {
+            $intSent++
+            $intSentSize += $_.TotalBytes
+        }
+        # Received E-mails
+        If ($_.EventId -eq "DELIVER") {
+            $intRec++
+            $intRecSize += $_.TotalBytes
+        }
+    }
+    $intSentSize = [Math]::Round($intSentSize/1MB, 0)
+    $intRecSize = [Math]::Round($intRecSize/1MB, 0)
+    # Add the numbers to the $strEmails variable and print the result for the day
+    $strEmails += "$intSent,$intSentSize,$intRec,$intRecSize"
+    $strEmails >> DailyStats.txt
+    # Increment the Start and End by one day
+    $Start = $Start.AddDays(1)
+    $End = $Start.AddDays(1)
+    }
+    While ($End -lt (Get-Date))
+}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # FUNCTION: Get Full Access Permissions
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function GetFullAccess {
@@ -509,7 +590,9 @@ Function showMenuExchange {
 $menuExchange=@"
     1 Active Directory & Exchange Schema Versions
     2 Exchange Server(s) Admin Display Version(s)
-    3 $unAss
+    3 $messageVolStatsToEventLog
+    4 $dailyMailVolStats
+    5 $unAss
     M Main Menu
 
     Select a task by number or M
@@ -559,21 +642,89 @@ $menuMain=@"
             "3" { thinkMailboxStats }
             "4" { thinkSpecialDelivery }
             "Q" { Write-Host "
-╦ ╦┌─┐┬  ┬┌─┐  ┌─┐  ┌┐┌┬┌─┐┌─┐  ┌┬┐┌─┐┬ ┬
-╠═╣├─┤└┐┌┘├┤   ├─┤  │││││  ├┤    ││├─┤└┬┘
-╩ ╩┴ ┴ └┘ └─┘  ┴ ┴  ┘└┘┴└─┘└─┘  ─┴┘┴ ┴ ┴o
+                        ╦ ╦┌─┐┬  ┬┌─┐  ┌─┐  ┌┐┌┬┌─┐┌─┐  ┌┬┐┌─┐┬ ┬
+                        ╠═╣├─┤└┐┌┘├┤   ├─┤  │││││  ├┤    ││├─┤└┬┘
+                        ╩ ╩┴ ┴ └┘ └─┘  ┴ ┴  ┘└┘┴└─┘└─┘  ─┴┘┴ ┴ ┴o
             " -fore Yellow; sleep -milliseconds 300; 
                   Write-Host "
-                                                                                                                              
-                                     _/_/_/                            _/  _/                                     
-                                  _/          _/_/      _/_/      _/_/_/  _/_/_/    _/    _/    _/_/              
-                                 _/  _/_/  _/    _/  _/    _/  _/    _/  _/    _/  _/    _/  _/_/_/_/             
-                                _/    _/  _/    _/  _/    _/  _/    _/  _/    _/  _/    _/  _/                    
-                                 _/_/_/    _/_/      _/_/      _/_/_/  _/_/_/      _/_/_/    _/_/_/  _/  _/  _/   
-                                                                                      _/                          
-                                                                                     _/_/                             
-
+                         _/_/_/                            _/  _/                                     
+                      _/          _/_/      _/_/      _/_/_/  _/_/_/    _/    _/    _/_/              
+                     _/  _/_/  _/    _/  _/    _/  _/    _/  _/    _/  _/    _/  _/_/_/_/             
+                    _/    _/  _/    _/  _/    _/  _/    _/  _/    _/  _/    _/  _/                    
+                     _/_/_/    _/_/      _/_/      _/_/_/  _/_/_/      _/_/_/    _/_/_/  _/  _/  _/   
+                                                                          _/                          
+                                                                         _/_/                             
             " -fore cyan;sleep -milliseconds 300;
+write-host @"
+                  ##          ##
+                    ##      ##         )  )
+                  ##############
+                ####  ######  ####
+              ######################
+              ##  ##############  ##     )   )
+              ##  ##          ##  ##
+                    ####  ####
+
+
+"@ -fore Red;start-sleep -seconds 1
+write-host @"
+                            ##
+                          ##
+                            ##
+                              ##
+                            ##
+                          ##
+                            ##
+
+
+"@ -fore Yellow;start-sleep -seconds 1
+write-host @"
+                                ############
+                            ####################       )  )
+                          ########################
+                        ####  ####  ####  ####  ####
+                      ################################      ) )
+                          ######    ####    ######
+                            ##                ##
+
+
+"@ -fore Blue;start-sleep -seconds 1
+write-host @"
+
+
+                    ██████╗  █████╗ ███╗   ███╗███████╗     ██████╗ ██╗   ██╗███████╗██████╗               
+                   ██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██╔═══██╗██║   ██║██╔════╝██╔══██╗              
+                   ██║  ███╗███████║██╔████╔██║█████╗      ██║   ██║██║   ██║█████╗  ██████╔╝              
+                   ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗              
+                   ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ╚██████╔╝ ╚████╔╝ ███████╗██║  ██║              
+                    ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝     ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝              
+
+
+"@ -fore DarkRed;start-sleep -seconds 1
+write-host @"                                                                                                           
+
+
+
+
+                   ██╗  ██╗██╗ ██████╗ ██╗  ██╗    ███████╗ ██████╗ ██████╗ ██████╗ ███████╗               
+                   ██║  ██║██║██╔════╝ ██║  ██║    ██╔════╝██╔════╝██╔═══██╗██╔══██╗██╔════╝               
+                   ███████║██║██║  ███╗███████║    ███████╗██║     ██║   ██║██████╔╝█████╗                 
+                   ██╔══██║██║██║   ██║██╔══██║    ╚════██║██║     ██║   ██║██╔══██╗██╔══╝                 
+                   ██║  ██║██║╚██████╔╝██║  ██║    ███████║╚██████╗╚██████╔╝██║  ██║███████╗               
+                   ╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝  ╚═╝    ╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝               
+"@ -fore white;start-sleep -seconds 1
+write-host @" 
+
+                                                                                                           
+ ██╗    ██████╗  ██████╗  ██████╗     ██████╗  ██████╗  ██████╗              ██████╗  █████╗ ███╗   ███╗██╗
+███║   ██╔═████╗██╔═████╗██╔═████╗   ██╔═████╗██╔═████╗██╔═████╗             ██╔══██╗██╔══██╗████╗ ████║██║
+╚██║   ██║██╔██║██║██╔██║██║██╔██║   ██║██╔██║██║██╔██║██║██╔██║             ██████╔╝███████║██╔████╔██║██║
+ ██║   ████╔╝██║████╔╝██║████╔╝██║   ████╔╝██║████╔╝██║████╔╝██║             ██╔══██╗██╔══██║██║╚██╔╝██║╚═╝
+ ██║▄█╗╚██████╔╝╚██████╔╝╚██████╔╝▄█╗╚██████╔╝╚██████╔╝╚██████╔╝             ██████╔╝██║  ██║██║ ╚═╝ ██║██╗
+ ╚═╝╚═╝ ╚═════╝  ╚═════╝  ╚═════╝ ╚═╝ ╚═════╝  ╚═════╝  ╚═════╝              ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚═╝
+"@ -fore blue;start-sleep -seconds 1
+
+
                   Return }
             Default { Write-Warning "MAIN MENU: Invalid Choice. Try again.";sleep -seconds 1 }
         }
