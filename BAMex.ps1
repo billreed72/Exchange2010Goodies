@@ -42,7 +42,7 @@ function GetExchangeServerNamesADV {
     $OutDVer.Name = $AdminDisplayVersion.Name
     $OutDVer.ADV = $AdminDisplayVersion.AdminDisplayVersion
     $ExchangeServerData += $OutDVer
-    $SavePathExServerData = ('ExchangeServers-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
+    $SavePathExServerData = ('ExchangeServers-{1:yyyyMMddHHmmss}.csv' -f $env:COMPUTERNAME,(Get-Date))
     $ExchangeServerData | Export-csv  -Path $SavePathExServerData
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathExServerData -Fore DarkRed -Back gray;start-sleep -seconds 1
@@ -52,8 +52,8 @@ function GetExchangeServerNamesADV {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function messageVolStatsToEventLog {
     $hts = get-exchangeserver |? {$_.serverrole -match "hubtransport"} |% {$_.name}
-    $startdate = Read-Host "Start Date"
-    $enddate = Read-Host "End Date"
+    $startdate = Read-Host "Start Date [mm/dd/yyyy]"
+    $enddate = Read-Host "End Date [mm/dd/yyyy]"
     function time_pipeline {
     param ($increment  = 1000)
     begin{$i=0;$timer = [diagnostics.stopwatch]::startnew()}
@@ -153,7 +153,7 @@ function GetFullAccess {
         $CurProcMbxFA++
         }
     }
-    $SavePathFAdata = ('FullAccess-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
+    $SavePathFAdata = ('FullAccess-{1:yyyyMMddHHmmss}.csv' -f $env:COMPUTERNAME,(Get-Date))
     $OutFAData | Export-csv  -Path $SavePathFAdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathFAdata -Fore DarkRed -Back gray;start-sleep -seconds 1
@@ -197,7 +197,7 @@ function GetSendOnBehalfAccess {
         }
     $CurProcMbxSOB++
     }
-    $SavePathSOBdata = ('SendOnBehalf-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
+    $SavePathSOBdata = ('SendOnBehalf-{1:yyyyMMddHHmmss}.csv' -f $env:COMPUTERNAME,(Get-Date))
     $OutSOBData | Export-csv  -Path $SavePathSOBdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathSOBdata -Fore DarkRed -Back gray;start-sleep -seconds 1
@@ -231,7 +231,7 @@ function GetSendAsAccess {
         $CurProcMbxSA++
         }
     }
-    $SavePathSAdata = ('SendAs-{1:yyyyMMddHHmm}.csv' -f $env:COMPUTERNAME,(Get-Date))
+    $SavePathSAdata = ('SendAs-{1:yyyyMMddHHmmss}.csv' -f $env:COMPUTERNAME,(Get-Date))
     $OutSAData | Export-csv  -Path $SavePathSAdata
     Write-Host 'Results saved: ' -Fore Yellow -Back Blue -NoNewLine;
     Write-Host $SavePathSAdata -Fore DarkRed -Back gray;start-sleep -seconds 1
@@ -300,8 +300,10 @@ function SetupDualDelivery {
     $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)'
     $sdDomain = Read-Host 'Remote domain Special Delivery ( @galias.domain.com )'
     $sdOU = Read-Host 'OU for Special Delivery Contacts ( dev10.net/SpecialDelivery )'
-    $UserList = Get-Content $UserListFile    
+    $UserList = Get-Content $UserListFile
+    $CurProcSUDD = 1
     foreach ($UserID in $UserList) {
+        Write-Host -NoNewLine $CurProcSUDD -Fore Blue -Back White; write-host '.' -Fore Red -Back White -NoNewLine
         $F = (Get-recipient $USerID).firstName
         $L = (Get-recipient $UserID).lastName
         $D = (Get-recipient $UserID).displayName
@@ -312,6 +314,7 @@ function SetupDualDelivery {
         New-MailContact -ExternalEmailAddress $sdSMTP -Name $sdDName -Alias $sdA -FirstName $F -LastName $L -OrganizationalUnit $sdOU
         Set-Mailbox $UserID -DeliverToMailboxAndForward:$True -ForwardingAddress $sdSMTP
         Set-MailContact $sdA -HiddenFromAddressListsEnabled $True
+        $CurProcSUDD++
     }
 }
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -322,8 +325,10 @@ function SetupSplitDelivery {
     $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)'
     $sdDomain = Read-Host 'Special Delivery Domain ( @galias.domain.com )'
     $sdOU = Read-Host 'Special Delivery Contacts OU ( dev10.net/SpecialDelivery )'
-    $UserList = Get-Content $UserListFile    
+    $UserList = Get-Content $UserListFile
+    $CurProcSUDS = 1
     foreach ($UserID in $UserList) {
+        Write-Host -NoNewLine $CurProcSUDS -Fore Blue -Back White; write-host '.' -Fore Red -Back White -NoNewLine
         $F = (Get-recipient $USerID).firstName
         $L = (Get-recipient $UserID).lastName
         $D = (Get-recipient $UserID).displayName
@@ -334,6 +339,7 @@ function SetupSplitDelivery {
         New-MailContact -ExternalEmailAddress $sdSMTP -Name $sdDName -Alias $sdA -FirstName $F -LastName $L -OrganizationalUnit $sdOU
         Set-Mailbox $UserID -DeliverToMailboxAndForward:$False -ForwardingAddress $sdSMTP
         Set-MailContact $sdA -HiddenFromAddressListsEnabled $True
+        $CurProcSUDS++
     }
 }
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -437,30 +443,21 @@ function VerifyDualDelivery {
 # FUNCTION: Export Mailbox to PST 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function exportToPST {
-    New-ManagementRoleAssignment -Role "Mailbox Import Export" -User Administrator
+    New-ManagementRoleAssignment -Role "Mailbox Import Export" -User Administrator | Out-Null
     Write-Host 'INPUT filename.' -Fore Cyan -Back DarkBlue
     $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)'
-    $PSTPath = Read-Host "Enter Path to Save Files [i.e. c:\dir\ or \\server\dir\ ]"
+    $PSTPath = Read-Host "UNC Path to Save PST Files (i.e. \\server\share\ ) "
     $UserList = Get-Content $UserListFile
     $CurrProcExpPst = 1
     write-EventLog -LogName $BamLogName -EventID 99 -Message "Exporting to PST : Started." -Source $BamLogSource -EntryType Information
     foreach ($UserID in $UserList) {
+        Write-Host -NoNewLine $CurrProcExpPst -Fore Blue -Back White; write-host '.' -Fore Red -Back White -NoNewLine
         If ($UserID -ne $NULL) {
-        New-MailboxExportRequest -Mailbox $UserID -FilePath "$PSTPath+$UserID+.pst"
+        New-MailboxExportRequest -Mailbox $UserID -FilePath "$PSTPath$UserID.pst" | out-null
         }
     $CurrProcExpPst++
     }
-Write-Host "
-                        ╦ ╦┌─┐┬  ┬┌─┐  ┌─┐  ┌┐┌┬┌─┐┌─┐  ┌┬┐┌─┐┬ ┬
-                        ╠═╣├─┤└┐┌┘├┤   ├─┤  │││││  ├┤    ││├─┤└┬┘
-                        ╩ ╩┴ ┴ └┘ └─┘  ┴ ┴  ┘└┘┴└─┘└─┘  ─┴┘┴ ┴ ┴o
-            " -fore Yellow; sleep -milliseconds 300
 }
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# FUNCTION: TBD 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 #=================================
 # MENU: Special Delivery Menu
 #=================================
@@ -483,22 +480,22 @@ Function showMenuSpecialDelivery {
 $menuSpecialDelivery=@"
   Dual Delivery Tasks:
     1 Add Mailboxes
-    2 Remove Mailboxes
+    2 Remove Mailboxes [$unAss]
 
   Split Delivery Tasks:
     3 Add Mailboxes
-    4 Remove Mailboxes
+    4 Remove Mailboxes [$unAss]
     
     5 Special Delivery: Report
-    6 Special Delivery: Teardown
+    6 Special Delivery: Teardown [$unAss]
  
   DENY Delivery Tasks:
     7 Setup Denied Delivery
-    8 Add Mailboxes
-    9 Remove Mailboxes
+    8 Add Mailboxes [$unAss]
+    9 Remove Mailboxes [$unAss]
     
-    10 Deny Delivery: Report
-    11 Deny Delivery: Teardown
+    10 Deny Delivery: Report [$unAss]
+    11 Deny Delivery: Teardown [$unAss]
     
     M Main Menu
 
@@ -506,17 +503,17 @@ $menuSpecialDelivery=@"
 "@
 Do {
     Switch (showMenuSpecialDelivery $menuSpecialDelivery "`tSpecial Delivery Menu" -clearScreen) {
-        "1" { SetupDualDelivery }
-        "2" { write-host 'test2' -fore green;start-sleep -seconds 1 }
-        "3" { SetupSplitDelivery }
-        "4" { write-host 'test4' -fore green;start-sleep -seconds 1 }
-        "5" { VerifyDualDelivery }
-        "6" { write-host 'test6' -fore green;start-sleep -seconds 1 }
-        "7" { setupAndRestrictDelivery }
-        "8" { write-host 'test8' -fore green;start-sleep -seconds 1 }
-        "9" { write-host 'test9' -fore green;start-sleep -seconds 1 }
-        "10" { write-host 'test10' -fore green;start-sleep -seconds 1 }
-        "11" { write-host 'test11' -fore green;start-sleep -seconds 1 }
+        "1" { Measure-Command{SetupDualDelivery};start-sleep 3 }
+        "2" { Write-Host $unAss -fore Green; start-sleep -seconds 1 }
+        "3" { Measure-Command{SetupSplitDelivery};start-sleep 3 }
+        "4" { Write-Host $unAss -fore Green; start-sleep -seconds 1 }
+        "5" { Measure-Command{VerifyDualDelivery};start-sleep 3 }
+        "6" { Write-Host $unAss -fore Green; start-sleep -seconds 1 }
+        "7" { Measure-Command{setupAndRestrictDelivery};start-sleep 3 }
+        "8" { Write-Host $unAss -fore Green; start-sleep -seconds 1 }
+        "9" { Write-Host $unAss -fore Green; start-sleep -seconds 1 }
+        "10" { Write-Host $unAss -fore Green; start-sleep -seconds 1 }
+        "11" { Write-Host $unAss -fore Green; start-sleep -seconds 1 }
         "M" { Return }
         Default { Write-Warning "Special Delivery MENU: Invalid Choice. Try again.";sleep -seconds 1 }
     }
@@ -545,15 +542,17 @@ $menuMailboxStats=@"
     1 Message Counts & Sizes by Mailbox
     2 Message Counts & Sizes by Mailbox Folder
     3 $unAss
+    4 $unAss
     M Main Menu
 
     Select a task by number or M
 "@
 Do {
     Switch (showMenuMailboxStats $menuMailboxStats "`tMailbox Statistics Menu" -clearscreen) {
-        "1" {Measure-Command{GetMailboxMsgCountsAndSize};start-sleep 3}
-        "2" {Measure-Command{GetMailboxFolderMsgCountsAndSize};start-sleep 3}
-        "3" {Write-Host $unAss -fore Green; sleep -seconds 1 }
+        "1" { Measure-Command{GetMailboxMsgCountsAndSize};start-sleep 3}
+        "2" { Measure-Command{GetMailboxFolderMsgCountsAndSize};start-sleep 3}
+        "3" { Write-Host $unAss -fore Green; start-sleep -seconds 1 }
+        "4" { Write-Host $unAss -fore Green; start-sleep -seconds 1 }
         "M" { Return }
         Default {Write-Warning "MailboxStats MENU: Invalid Choice. Try again.";sleep -milliseconds 750}
     }
@@ -582,15 +581,17 @@ $menuMailboxPermissions=@"
     1 Who has Full Access?
     2 Who has Send On Behalf Access?
     3 Who has Send As Access?
+    4 MAPI Permissions? [$unAss]
     M Main Menu
 
     Select a task by number or M
 "@
 Do {
     Switch (showMenuMailboxPermissions $menuMailboxPermissions "`tMailbox Permissions Menu" -clearScreen) {
-        "1" { GetFullAccess }
-        "2" { GetSendOnBehalfAccess }
-        "3" { GetSendAsAccess }
+        "1" { Measure-Command{GetFullAccess};start-sleep 3 }
+        "2" { Measure-Command{GetSendOnBehalfAccess};start-sleep 3 }
+        "3" { Measure-Command{GetSendAsAccess};start-sleep 3 }
+        "4" { Write-Host $unAss -fore Green; start-sleep -seconds 1 }
         "M" { Return }
         Default { Write-Warning "Mailbox Permissions MENU: Invalid Choice. Try again.";sleep -seconds 1 }
     }
@@ -627,11 +628,11 @@ $menuExchange=@"
 "@
 Do {
     Switch (showMenuExchange $menuExchange "`tExchange Properties Menu" -clearScreen) {
-        "1" { GetExchangeSchemaVerions }
-        "2" { GetExchangeServerNamesADV }
-        "3" { messageVolStatsToEventLog }
-        "4" { dailyMailVolStats }
-        "5" { Write-Host $unAss -fore Yellow -back blue; sleep -seconds 1 }
+        "1" { Measure-Command{GetExchangeSchemaVerions};start-sleep 3 }
+        "2" { Measure-Command{GetExchangeServerNamesADV};start-sleep 3 }
+        "3" { Measure-Command{messageVolStatsToEventLog};start-sleep 3 }
+        "4" { Measure-Command{dailyMailVolStats};start-sleep 3 }
+        "5" { Write-Host $unAss -fore Green; start-sleep -seconds 1 }
         "M" { Return }
         Default { Write-Warning "Exchange MENU: Invalid Choice. Try again.";sleep -seconds 1 }
     }
@@ -658,10 +659,11 @@ Function thinkMenuMain {
     }
 $menuMain=@"
     1 Exchange System Properties
-    2 Mailbox Permissions
+    2 Mailbox Properties
     3 Mailbox Statistics
     4 Special Delivery
-    5 Exporting Data 
+    5 Exporting Mailbox Data to PST 
+    6 $unAss
     Q Quit
 
     Select a task by number or Q to quit
@@ -672,7 +674,8 @@ $menuMain=@"
             "2" { thinkMenuMailboxPermissions }
             "3" { thinkMailboxStats }
             "4" { thinkSpecialDelivery }
-            "5" { exportToPST }
+            "5" { Measure-Command{exportToPST};start-sleep 3 }
+            "6" { Write-Host $unAss -fore Green; start-sleep -seconds 1 }
             "Q" { Write-Host "
                         ╦ ╦┌─┐┬  ┬┌─┐  ┌─┐  ┌┐┌┬┌─┐┌─┐  ┌┬┐┌─┐┬ ┬
                         ╠═╣├─┤└┐┌┘├┤   ├─┤  │││││  ├┤    ││├─┤└┬┘
@@ -698,7 +701,7 @@ write-host @"
                     ####  ####
 
 
-"@ -fore Red;start-sleep -seconds 1
+"@ -fore Red;start-sleep -milliseconds 300
 write-host @"
                             ##
                           ##
@@ -709,7 +712,7 @@ write-host @"
                             ##
 
 
-"@ -fore Yellow;start-sleep -seconds 1
+"@ -fore Yellow;start-sleep -milliseconds 300
 write-host @"
                                 ############
                             ####################       )  )
@@ -720,7 +723,7 @@ write-host @"
                             ##                ##
 
 
-"@ -fore Blue;start-sleep -seconds 1
+"@ -fore Blue;start-sleep -milliseconds 300
 write-host @"
 
 
@@ -732,7 +735,7 @@ write-host @"
                     ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝     ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝              
 
 
-"@ -fore DarkRed;start-sleep -seconds 1
+"@ -fore DarkRed;start-sleep -milliseconds 300
 write-host @"                                                                                                           
 
 
@@ -744,7 +747,7 @@ write-host @"
                    ██╔══██║██║██║   ██║██╔══██║    ╚════██║██║     ██║   ██║██╔══██╗██╔══╝                 
                    ██║  ██║██║╚██████╔╝██║  ██║    ███████║╚██████╗╚██████╔╝██║  ██║███████╗               
                    ╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝  ╚═╝    ╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝               
-"@ -fore white;start-sleep -seconds 1
+"@ -fore white;start-sleep -milliseconds 300
 write-host @" 
 
                                                                                                            
@@ -754,7 +757,7 @@ write-host @"
  ██║   ████╔╝██║████╔╝██║████╔╝██║   ████╔╝██║████╔╝██║████╔╝██║             ██╔══██╗██╔══██║██║╚██╔╝██║╚═╝
  ██║▄█╗╚██████╔╝╚██████╔╝╚██████╔╝▄█╗╚██████╔╝╚██████╔╝╚██████╔╝             ██████╔╝██║  ██║██║ ╚═╝ ██║██╗
  ╚═╝╚═╝ ╚═════╝  ╚═════╝  ╚═════╝ ╚═╝ ╚═════╝  ╚═════╝  ╚═════╝              ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚═╝
-"@ -fore blue;start-sleep -seconds 1
+"@ -fore blue;start-sleep -milliseconds 300
 
 
                   Return }
