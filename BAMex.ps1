@@ -440,7 +440,7 @@ function exportToPST {
     New-ManagementRoleAssignment -Role "Mailbox Import Export" -User Administrator
     Write-Host 'INPUT filename.' -Fore Cyan -Back DarkBlue
     $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)'
-    $PSTPath = Read-Host "Enter Path to Save Files"
+    $PSTPath = Read-Host "Enter Path to Save Files [i.e. c:\dir\ or \\server\dir\ ]"
     $UserList = Get-Content $UserListFile
     $CurrProcExpPst = 1
     write-EventLog -LogName $BamLogName -EventID 99 -Message "Exporting to PST : Started." -Source $BamLogSource -EntryType Information
