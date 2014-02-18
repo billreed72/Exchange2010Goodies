@@ -658,7 +658,7 @@ Function thinkMenuMain {
     }
 $menuMain=@"
     1 Exchange System Properties
-    2 Mailbox Properties
+    2 Mailbox Permissions
     3 Mailbox Statistics
     4 Special Delivery
     5 Exporting Data 
