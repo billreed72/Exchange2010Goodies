@@ -433,6 +433,34 @@ function VerifyDualDelivery {
     Write-Host $SavePathVDDdata -Fore DarkRed -Back gray;start-sleep -seconds 1
     write-EventLog -LogName $BamLogName -EventID 99 -Message "Results: Special Delivery Method Report saved: [$SavePathVDDdata]." -Source $BamLogSource -EntryType Information
 }
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# FUNCTION: Export Mailbox to PST 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+function exportToPST {
+    New-ManagementRoleAssignment -Role "Mailbox Import Export" -User Administrator
+    Write-Host 'INPUT filename.' -Fore Cyan -Back DarkBlue
+    $UserListFile = Read-Host '(i.e. c:\userList.csv or userList.csv)'
+    $PSTPath = Read-Host "Enter Path to Save Files"
+    $UserList = Get-Content $UserListFile
+    $CurrProcExpPst = 1
+    write-EventLog -LogName $BamLogName -EventID 99 -Message "Exporting to PST : Started." -Source $BamLogSource -EntryType Information
+    foreach ($UserID in $UserList) {
+        If ($UserID -ne $NULL) {
+        New-MailboxExportRequest -Mailbox $UserID -FilePath "$PSTPath+$UserID+.pst"
+        }
+    $CurrProcExpPst++
+    }
+Write-Host "
+                        ╦ ╦┌─┐┬  ┬┌─┐  ┌─┐  ┌┐┌┬┌─┐┌─┐  ┌┬┐┌─┐┬ ┬
+                        ╠═╣├─┤└┐┌┘├┤   ├─┤  │││││  ├┤    ││├─┤└┬┘
+                        ╩ ╩┴ ┴ └┘ └─┘  ┴ ┴  ┘└┘┴└─┘└─┘  ─┴┘┴ ┴ ┴o
+            " -fore Yellow; sleep -milliseconds 300
+}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# FUNCTION: TBD 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 #=================================
 # MENU: Special Delivery Menu
 #=================================
@@ -633,6 +661,7 @@ $menuMain=@"
     2 Mailbox Properties
     3 Mailbox Statistics
     4 Special Delivery
+    5 Exporting Data 
     Q Quit
 
     Select a task by number or Q to quit
@@ -643,6 +672,7 @@ $menuMain=@"
             "2" { thinkMenuMailboxPermissions }
             "3" { thinkMailboxStats }
             "4" { thinkSpecialDelivery }
+            "5" { exportToPST }
             "Q" { Write-Host "
                         ╦ ╦┌─┐┬  ┬┌─┐  ┌─┐  ┌┐┌┬┌─┐┌─┐  ┌┬┐┌─┐┬ ┬
                         ╠═╣├─┤└┐┌┘├┤   ├─┤  │││││  ├┤    ││├─┤└┬┘
